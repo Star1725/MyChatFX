@@ -134,10 +134,15 @@ public class ClientHandler {
                             }
                             continue;
                         }
-                        System.out.println("Сервер получил сообщение для всех от " + nickName + ": " + msg);
-                        controller.showInGUI(StartServer.getCurTime() + " - Сервер получил сообщение для всех от " + nickName + ": " + msg + "\n");
+                        System.out.println("Сервер получил сообщение для всех от " + this.nickName + ": " + msg);
+                        controller.showInGUI(StartServer.getCurTime() + " - Сервер получил сообщение для всех от " + this.nickName + ": " + msg + "\n");
                         //добавляем перед msg nickname, чтобы все знали от кого сообщение
-                        server.broadcastMsg(String.format("%s %s", nickName, msg), this);
+                        server.broadcastMsg(msg, this);
+                        try {
+                            DatabaseHandler.insertClientsMsgInDB("", this.nickName, "forAll", dateGetMsgFromClient, msg);
+                        } catch (SQLException throwables) {
+                            throwables.printStackTrace();
+                        }
                     }
                 } catch (SocketTimeoutException e){
                     System.out.println(e.getMessage());

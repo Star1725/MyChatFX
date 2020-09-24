@@ -104,7 +104,7 @@ public class Server {
     public void broadcastMsg(String msgFromNickName, ClientHandler clientHandler){
         for (ClientHandler client : clients) {
             if (!client.equals(clientHandler)){
-                client.sendMsg(msgFromNickName);
+                client.sendMsg(String.format("%s %s", clientHandler.getNickName(), msgFromNickName));
             }
         }
     }
