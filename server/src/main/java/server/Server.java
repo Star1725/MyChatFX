@@ -6,6 +6,9 @@ import javafx.scene.paint.Color;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Vector;
 
@@ -63,9 +66,7 @@ public class Server {
                         "              getLocalSocketAddress - " + serverSocket.getLocalSocketAddress() + "\n" +
                         "              getLocalPort - " + serverSocket.getLocalPort() + "\n");
                 while (!Thread.currentThread().isInterrupted()){
-                    Platform.runLater(() -> {
-                        controller.circleStartServer.setFill(Color.GREEN);
-                    });
+                    Platform.runLater(() -> controller.circleStartServer.setFill(Color.GREEN));
                     Socket socket = serverSocket.accept();
                     logInConsoleAndGUI(controller, StartServer.getCurTime() + " - connect client: " + socket.getRemoteSocketAddress() + "\n" +
                             "socket: getInetAddress - " + socket.getInetAddress() + "\n" +
@@ -149,14 +150,18 @@ public class Server {
     }
 
     private void getAndShowCountClients(Controller controller, int count) {
-        Platform.runLater(() -> {
-            controller.labelCountOfClients.setText(String.format(controller.COUNT_CLIENTS + "%d", count));
-        });
+        Platform.runLater(() -> controller.labelCountOfClients.setText(String.format(controller.COUNT_CLIENTS + "%d", count)));
     }
 
     public void broadcastMsgEnd(String msg) {
         for (ClientHandler client : clients) {
             client.sendMsg(msg);
         }
+    }
+
+    private String getCurTime() {
+        Calendar calendar = Calendar.getInstance();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        return dateFormat.format(calendar.getTime());
     }
 }

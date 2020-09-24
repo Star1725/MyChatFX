@@ -15,8 +15,9 @@ public class DatabaseHandler implements AuthServiсe{
     private static final String MESSAGES_TABLE = "messages";
     private static final String MESSAGES_COLUMN_ID = "id_messages";
     private static final String MESSAGES_COLUMN_FLAG = "flag";
-    private static final String MESSAGES_COLUMN_ID_SENDER = "id sender";
-    private static final String MESSAGES_COLUMN_ID_RECEIVER = "id receiver";
+    private static final String MESSAGES_COLUMN_ID_SENDER = "id_sender";
+    private static final String MESSAGES_COLUMN_ID_RECEIVER = "id_receiver";
+    private static final String MESSAGES_COLUMN_DATE_RECEIPT = "date_of_receipt";
     private static final String MESSAGES_COLUMN_MSG = "msg";
 
     private String nickName;
@@ -61,6 +62,7 @@ public class DatabaseHandler implements AuthServiсe{
                     MESSAGES_COLUMN_FLAG + " TEXT," +
                     MESSAGES_COLUMN_ID_SENDER + " INTEGER," +
                     MESSAGES_COLUMN_ID_RECEIVER + " INTEGER," +
+                    MESSAGES_COLUMN_DATE_RECEIPT + " INTEGER," +
                     MESSAGES_COLUMN_MSG + " TEXT);");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -75,12 +77,31 @@ public class DatabaseHandler implements AuthServiсe{
         preparedStatement.executeUpdate();
     }
 
+    public synchronized static void insertClientsMsgInDB(String flag, String sender, String receiver, String date, String msg) throws SQLException {
+        connect();
+        preparedStatement = connection.prepareStatement("INSERT INTO " + MESSAGES_TABLE + " (" +
+                MESSAGES_COLUMN_FLAG + " , " +
+                MESSAGES_COLUMN_ID_SENDER + " , " +
+                MESSAGES_COLUMN_ID_RECEIVER + " , " +
+                MESSAGES_COLUMN_DATE_RECEIPT + " , " +
+                MESSAGES_COLUMN_MSG +
+                ") VALUES (?, ?, ?, ?, ?);");
+        preparedStatement.setString(1, flag);
+        preparedStatement.setString(2, sender);
+        preparedStatement.setString(3, receiver);
+        preparedStatement.setString(4, date);
+        preparedStatement.setString(5, msg);
+        preparedStatement.executeUpdate();
+        disconnect();
+    }
+
     public static int checkClientsDataForReg(String login, String nickname) throws SQLException {
         ResultSet resultSet = statement.executeQuery("SELECT COUNT(login), COUNT(nickname) FROM clients WHERE login = '" + login + "' OR nickname = '" + nickname + "';");
         resultSet.next();
         System.out.println("** Колво совпадений при регистрации - " + resultSet.getInt(1) + resultSet.getInt(2));
         return (resultSet.getInt(1) + resultSet.getInt(2));
     }
+
 
     public static String checkClientsDataInDBForAuth(String login,String password) throws SQLException {
         ResultSet resultSet = statement.executeQuery("SELECT nickname FROM clients WHERE login = '" + login + "' AND password = '" + password + "';");
@@ -170,7 +191,7 @@ public class DatabaseHandler implements AuthServiсe{
     }
 
     public synchronized void uploadHistoryForClientHandler(ClientHandler clientHandler){
-        ResultSet resultSet = null;
+        ResultSet resultSet;
         try {
             resultSet = statement.executeQuery("SELECT * FROM " + MESSAGES_TABLE +
                     " INNER JON " + CLIENTS_TABLE +

@@ -29,6 +29,9 @@ public class ChatController implements Initializable{
 
     public AnchorPane anchPanelListContacts;
 
+    private static final int FLAG_TIME = 0;
+    private static final int FLAG_DATE = 1;
+
     public void clickListClients(MouseEvent mouseEvent) {
         //различные нажатия на мышь
         //mouseEvent.
@@ -81,7 +84,7 @@ public class ChatController implements Initializable{
 
     private void sendAndCreateMsg() {
         String msg = textFieldForSend.getText().trim();
-        readWriteNetHandler.sendMsg(msg);
+        readWriteNetHandler.sendMsg(String.format("%s %s", getCurTime(FLAG_DATE), msg));
         createGUIMessageForChat(true, msg);
     }
     //метод для получения сообщения от readWriteNetHandler
@@ -93,7 +96,8 @@ public class ChatController implements Initializable{
         if (!msg.isEmpty()) {
             String privateMsgFor = "";
             String sendName;
-            if (isMyMsg){//моё сообщение
+            //моё сообщение
+            if (isMyMsg){
                 sendName = "Вы";
                 if (msg.startsWith("/w")){//моё личное сообщение для
                     String[] token = msg.split("\\s", 3);
@@ -101,20 +105,21 @@ public class ChatController implements Initializable{
                     privateMsgFor = "(личное для " + token[1] + ")";
                     System.out.println("createMessage" + privateMsgFor + " - " + msg );
                 }
-            } else if (msg.startsWith("/w")){//личное сообщение из чата
-                String[] token = msg.split("\\s", 4);
-                msg = token[3];
+                //личное сообщение из чата
+            } else if (msg.startsWith("/w")){
+                String[] token = msg.split("\\s", 3);
+                msg = token[2];
                 System.out.println("private createMessage - " + msg );
-                sendName = token[2];
+                sendName = token[1];
                 privateMsgFor = "(личное)";
-            } else {//сообщение из чата
+            } else {//общее сообщение из чата
                 String[] token = msg.split("\\s", 2);
                 msg = token[1];
                 System.out.println("createMessage - " + msg );
                 sendName = token[0];
             }
 
-            Label labelNameAndTime = new Label( sendName + " в " + getCurTime() + " " + privateMsgFor);
+            Label labelNameAndTime = new Label( sendName + " в " + getCurTime(FLAG_TIME) + " " + privateMsgFor);
             Label labelMes = new Label(msg.trim());
             labelMes.setWrapText(true);
             labelMes.setBackground(new Background(new BackgroundFill(javafx.scene.paint.Color.WHITE, new CornerRadii(10),
@@ -138,13 +143,18 @@ public class ChatController implements Initializable{
                 textFieldForSend.requestFocus();
                 textFieldForSend.clear();
             });
-
         }
     }
 
-    private String getCurTime() {
+    private String getCurTime(int flagTimeOrDate) {
         Calendar calendar = Calendar.getInstance();
-        DateFormat dateFormat = new SimpleDateFormat("HH:mm");
+        DateFormat dateFormat = null;
+        if (flagTimeOrDate == FLAG_TIME){
+            dateFormat = new SimpleDateFormat("HH:mm");
+        } else if (flagTimeOrDate == FLAG_DATE){
+            dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        }
+        assert dateFormat != null;
         return dateFormat.format(calendar.getTime());
     }
 

@@ -5,6 +5,10 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class ClientHandler {
     private static final int TIMEOUT_CLOSE_CONNECT = 15000;
@@ -57,10 +61,6 @@ public class ClientHandler {
                             if (token.length < 3){
                                 continue;
                             }
-//                            String newNickName = server
-//                                    .getAuthService()
-//                                    .getNickNameByLoginAndPassword(token[1], token[2]);
-
                             String newNickName = server
                                     .getDatabaseHandler()
                                     .getNickNameByLoginAndPassword(token[1], token[2]);
@@ -109,7 +109,9 @@ public class ClientHandler {
 
                         controller.showInGUI(StartServer.getCurTime() + " - Цикл работы\n");
                         String msg = inputStreamNet.readUTF();
-
+                        String[] globalToken = msg.split("\\s", 3);
+                        String dateGetMsgFromClient = String.format("%s %s", globalToken[0], globalToken[1]);
+                        msg = globalToken[2];
                         if (msg.startsWith("/end")){
                             System.out.println("Сервер получил служебное сообщение /end от " + this.getNickName());
                             controller.showInGUI(StartServer.getCurTime() + " - Сервер получил служебное сообщение /end от " + this.getNickName() + "\n");
@@ -121,16 +123,21 @@ public class ClientHandler {
                             controller.showInGUI(StartServer.getCurTime() + " - Сервер получил служебное сообщение \"" + msg + "\" от " + this.getNickName() + "\n");
                             String[] token = msg.split("\\s", 3);
                             String forNickName = token[1];
-                            String fromNickName = this.nickName;
-                            msg = String.format("%s %s %s %s", token[0], forNickName, fromNickName, token[2]);
-                            System.out.println("Сервер преобразовал сообщение для " + forNickName + " от " + fromNickName + ": " + msg);
-                            controller.showInGUI(StartServer.getCurTime() + " - Сервер получил сообщение для " + forNickName + " от " + fromNickName + ": " + msg + "\n");
+                            msg = String.format("%s %s %s", token[0], this.nickName, token[2]);
+                            System.out.println("Сервер преобразовал сообщение для " + forNickName + " от " + this.nickName + ": " + msg);
+                            controller.showInGUI(StartServer.getCurTime() + " - Сервер получил сообщение для " + forNickName + " от " + this.nickName + ": " + msg + " в " + token[2] + "\n");
                             server.sendPrivatMsg(forNickName, msg);
+                            try {
+                                DatabaseHandler.insertClientsMsgInDB(token[0], this.nickName, forNickName, dateGetMsgFromClient, token[2]);
+                            } catch (SQLException throwables) {
+                                throwables.printStackTrace();
+                            }
                             continue;
                         }
                         System.out.println("Сервер получил сообщение для всех от " + nickName + ": " + msg);
                         controller.showInGUI(StartServer.getCurTime() + " - Сервер получил сообщение для всех от " + nickName + ": " + msg + "\n");
-                        server.broadcastMsg(String.format("%s %s", nickName, msg), this);//добавляем перед msg nickname, чтобы все знали от кого сообщение
+                        //добавляем перед msg nickname, чтобы все знали от кого сообщение
+                        server.broadcastMsg(String.format("%s %s", nickName, msg), this);
                     }
                 } catch (SocketTimeoutException e){
                     System.out.println(e.getMessage());
