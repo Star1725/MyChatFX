@@ -29,8 +29,13 @@ public class ClientHandler {
     }
 
     private String login;
-
     private String nickName;
+
+    public int getId() {
+        return id;
+    }
+
+    private int id;
     DataInputStream inputStreamNet;
     DataOutputStream outputStreamNet;
 
@@ -61,13 +66,15 @@ public class ClientHandler {
                             if (token.length < 3){
                                 continue;
                             }
-                            String newNickName = server
+                            Object[] dataAuth = server
                                     .getDatabaseHandler()
                                     .getNickNameByLoginAndPassword(token[1], token[2]);
+                            String newNickName = (String) dataAuth[1];
                             login = token[1];
                             if (newNickName != null){
                                 if (!server.isAuthenticated(login)){
                                     nickName = newNickName;
+                                    id = (Integer) dataAuth [0];
                                     sendMsg(String.format("%s %s", "/authok", newNickName));
                                     server.subscribe(this);
                                     System.out.println("Клиент " + nickName + " подключился");
@@ -102,7 +109,6 @@ public class ClientHandler {
                     }
                     //загрузка истории из БД
                     //databaseHandler.uploadHistoryForClientHandler(this);
-
                     //работа
                     while (true){
                         System.out.println("Цикл работы");
@@ -127,22 +133,18 @@ public class ClientHandler {
                             System.out.println("Сервер преобразовал сообщение для " + forNickName + " от " + this.nickName + ": " + msg);
                             controller.showInGUI(StartServer.getCurTime() + " - Сервер получил сообщение для " + forNickName + " от " + this.nickName + ": " + msg + " в " + token[2] + "\n");
                             server.sendPrivatMsg(forNickName, msg);
-                            try {
-                                DatabaseHandler.insertClientsMsgInDB(token[0], this.nickName, forNickName, dateGetMsgFromClient, token[2]);
-                            } catch (SQLException throwables) {
-                                throwables.printStackTrace();
-                            }
+                            //запись сообщения в БД
+                            DatabaseHandler.insertClientsMsgInDB(token[0], this.id, server.getIdForNickname(forNickName), dateGetMsgFromClient, token[2]);
+
                             continue;
                         }
                         System.out.println("Сервер получил сообщение для всех от " + this.nickName + ": " + msg);
                         controller.showInGUI(StartServer.getCurTime() + " - Сервер получил сообщение для всех от " + this.nickName + ": " + msg + "\n");
                         //добавляем перед msg nickname, чтобы все знали от кого сообщение
                         server.broadcastMsg(msg, this);
-                        try {
-                            DatabaseHandler.insertClientsMsgInDB("", this.nickName, "forAll", dateGetMsgFromClient, msg);
-                        } catch (SQLException throwables) {
-                            throwables.printStackTrace();
-                        }
+                        //запись сообщения в БД
+                        DatabaseHandler.insertClientsMsgInDB("", this.id, 0, dateGetMsgFromClient, msg);
+
                     }
                 } catch (SocketTimeoutException e){
                     System.out.println(e.getMessage());

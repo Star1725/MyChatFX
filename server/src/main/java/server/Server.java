@@ -138,6 +138,15 @@ public class Server {
         return false;
     }
 
+    public int getIdForNickname(String nickname){
+        for (ClientHandler client : clients) {
+            if (client.getNickName().equals(nickname)){
+                return client.getId();
+            }
+        }
+        return 0;
+    }
+
     private void broadcastListClients(){
         StringBuilder sb = new StringBuilder("/clientlist ");
         for (ClientHandler client : clients) {

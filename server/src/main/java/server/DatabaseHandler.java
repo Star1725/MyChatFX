@@ -62,7 +62,7 @@ public class DatabaseHandler implements AuthServiсe{
                     MESSAGES_COLUMN_FLAG + " TEXT," +
                     MESSAGES_COLUMN_ID_SENDER + " INTEGER," +
                     MESSAGES_COLUMN_ID_RECEIVER + " INTEGER," +
-                    MESSAGES_COLUMN_DATE_RECEIPT + " INTEGER," +
+                    MESSAGES_COLUMN_DATE_RECEIPT + " TEXT," +
                     MESSAGES_COLUMN_MSG + " TEXT);");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -77,21 +77,24 @@ public class DatabaseHandler implements AuthServiсe{
         preparedStatement.executeUpdate();
     }
 
-    public synchronized static void insertClientsMsgInDB(String flag, String sender, String receiver, String date, String msg) throws SQLException {
+    public synchronized static void insertClientsMsgInDB(String flag, int idSender, int idReceiver, String date, String msg){
         connect();
-        preparedStatement = connection.prepareStatement("INSERT INTO " + MESSAGES_TABLE + " (" +
+        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO " + MESSAGES_TABLE + " (" +
                 MESSAGES_COLUMN_FLAG + " , " +
                 MESSAGES_COLUMN_ID_SENDER + " , " +
                 MESSAGES_COLUMN_ID_RECEIVER + " , " +
                 MESSAGES_COLUMN_DATE_RECEIPT + " , " +
                 MESSAGES_COLUMN_MSG +
-                ") VALUES (?, ?, ?, ?, ?);");
-        preparedStatement.setString(1, flag);
-        preparedStatement.setString(2, sender);
-        preparedStatement.setString(3, receiver);
-        preparedStatement.setString(4, date);
-        preparedStatement.setString(5, msg);
-        preparedStatement.executeUpdate();
+                ") VALUES (?, ?, ?, ?, ?);");){
+            ps.setString(1, flag);
+            ps.setInt(2, idSender);
+            ps.setInt(3, idReceiver);
+            ps.setString(4, date);
+            ps.setString(5, msg);
+            ps.executeUpdate();
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
         disconnect();
     }
 
@@ -100,17 +103,6 @@ public class DatabaseHandler implements AuthServiсe{
         resultSet.next();
         System.out.println("** Колво совпадений при регистрации - " + resultSet.getInt(1) + resultSet.getInt(2));
         return (resultSet.getInt(1) + resultSet.getInt(2));
-    }
-
-
-    public static String checkClientsDataInDBForAuth(String login,String password) throws SQLException {
-        ResultSet resultSet = statement.executeQuery("SELECT nickname FROM clients WHERE login = '" + login + "' AND password = '" + password + "';");
-        resultSet.next();
-        if(resultSet.isClosed()) return null;
-        else {
-            System.out.println("** Nickname полученный при аунтотификации - " + resultSet.getString(1));
-            return resultSet.getString(1);
-        }
     }
 
     public static void disconnect(){
@@ -154,17 +146,31 @@ public class DatabaseHandler implements AuthServiсe{
     }
 
     @Override
-    public synchronized String getNickNameByLoginAndPassword(String login, String password){
+    public synchronized Object[] getNickNameByLoginAndPassword(String login, String password){
         connect();
         logInConsoleAndGUI(controller, "** connect with myDB");
-        try {
-            nickName = checkClientsDataInDBForAuth(login, password);
+        int id = 0;
+        String nickname = null;
+        try (PreparedStatement ps = connection.prepareStatement("SELECT " + CLIENTS_COLUMN_ID + " , " + CLIENTS_COLUMN_NICKNAME + " FROM " + CLIENTS_TABLE +
+                " WHERE login = ? AND password = ?;")){
+            ps.setString(1, login);
+            ps.setString(2, password);
+            try (ResultSet resultSet = ps.executeQuery();){
+                while (resultSet.next()){
+                    if(resultSet.isClosed()) return null;
+                    else {
+                        id = resultSet.getInt(1);
+                        nickname = resultSet.getString(1);
+                        System.out.println("** полученны при аунтотификации следующие данные - " + id + " - " + nickname);
+                    }
+                }
+            }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
         disconnect();
         logInConsoleAndGUI(controller, "** disconnect with myDB");
-        return nickName;
+        return new Object[]{id, nickname};
     }
 
     @Override
@@ -191,15 +197,22 @@ public class DatabaseHandler implements AuthServiсe{
     }
 
     public synchronized void uploadHistoryForClientHandler(ClientHandler clientHandler){
+        String nicknameForQuery = clientHandler.getNickName();
         ResultSet resultSet;
         try {
             resultSet = statement.executeQuery("SELECT * FROM " + MESSAGES_TABLE +
                     " INNER JON " + CLIENTS_TABLE +
-                    " ON " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_SENDER + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
+                    " ON " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_SENDER + " AS Sender " + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
                     " INNER JON " + CLIENTS_TABLE +
-                    " ON " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_RECEIVER + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
-                    " WHERE " + CLIENTS_COLUMN_NICKNAME + " = " + clientHandler.getNickName() + ";");
+                    " ON " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_RECEIVER + " AS Receiver " + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
+                    " WHERE Sender = " + nicknameForQuery + ";");
             while (resultSet.next()){
+                System.out.print(resultSet.getInt(1));
+                System.out.print(resultSet.getInt(2));
+                System.out.print(resultSet.getString(3));
+                System.out.print(resultSet.getString(4));
+                System.out.print(resultSet.getString(5));
+                System.out.print(resultSet.getString(6));
 
             }
         } catch (SQLException throwables) {
