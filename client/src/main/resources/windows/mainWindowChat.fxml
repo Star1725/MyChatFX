@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<SplitPane fx:id="splitPaneMainWindow" dividerPositions="0.29797979797979796" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="600.0" minWidth="337.0" prefHeight="600.0" prefWidth="360.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.ChatController">
+   <items>
+      <AnchorPane fx:id="anchPanelListContacts" minHeight="120.0" minWidth="120.0" prefHeight="160.0" prefWidth="100.0">
+         <children>
+            <Label alignment="CENTER" contentDisplay="CENTER" layoutX="54.0" layoutY="4.0" minWidth="-Infinity" prefHeight="21.0" prefWidth="126.0" text="Список чата" textAlignment="CENTER" textFill="#868484" textOverrun="CENTER_WORD_ELLIPSIS" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" />
+            <ListView fx:id="listContacts" layoutX="-28.0" layoutY="31.0" onMouseClicked="#clickListClients" prefHeight="567.0" prefWidth="144.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="31.0" />
+         </children></AnchorPane>
+      <AnchorPane fx:id="anchPaneChatField" minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+         <children>
+            <TextField fx:id="textFieldForSend" layoutY="569.0" onAction="#onAction" prefHeight="31.0" prefWidth="433.0" promptText=" " AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="130.0" />
+            <HBox alignment="CENTER" layoutX="426.0" layoutY="567.0" prefHeight="31.0" prefWidth="132.0" AnchorPane.bottomAnchor="0.0" AnchorPane.rightAnchor="0.0">
+               <children>
+                  <ImageView fx:id="imageViewSend" fitHeight="31.0" fitWidth="39.0" onMouseClicked="#onClickedForSend" pickOnBounds="true" preserveRatio="true">
+                     <HBox.margin>
+                        <Insets left="10.0" right="10.0" />
+                     </HBox.margin>
+                     <image>
+                        <Image url="@../icons/icons8-sent-32.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="imageViewEmoji" fitHeight="31.0" fitWidth="44.0" pickOnBounds="true" preserveRatio="true">
+                     <HBox.margin>
+                        <Insets right="10.0" />
+                     </HBox.margin>
+                     <image>
+                        <Image url="@../icons/icons8-happy-32.png" />
+                     </image>
+                  </ImageView>
+                  <ImageView fx:id="imageViewPut" fitHeight="31.0" fitWidth="50.0" pickOnBounds="true" preserveRatio="true">
+                     <image>
+                        <Image url="@../icons/icons8-attach-32.png" />
+                     </image>
+                  </ImageView>
+               </children>
+            </HBox>
+            <ScrollPane fitToHeight="true" fitToWidth="true" pannable="true" prefHeight="200.0" prefWidth="200.0" AnchorPane.bottomAnchor="31.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <content>
+                  <VBox fx:id="vBoxForFieldChat" alignment="TOP_RIGHT" opacity="0.5" style="-fx-background-color: white;" />
+               </content>
+            </ScrollPane>
+         </children>
+      </AnchorPane>
+   </items>
+</SplitPane>
