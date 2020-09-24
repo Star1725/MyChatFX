@@ -101,7 +101,7 @@ public class ClientHandler {
                         }
                     }
                     //загрузка истории из БД
-                    databaseHandler.uploadHistoryForClientHandler(this);
+                    //databaseHandler.uploadHistoryForClientHandler(this);
 
                     //работа
                     while (true){
