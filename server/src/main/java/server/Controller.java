@@ -15,45 +15,50 @@ import java.sql.SQLException;
 import java.util.ResourceBundle;
 
 public class Controller implements Initializable {
-    public TextField txtFldILocalPAddress;
-    public Button btnSendIP;
     public Button btnSendPort;
-    public TextArea txtAreaForConsole;
     public Button btnStartServer;
     public TextField txtFldForPort;
+
+    public int getPort() {
+        return port;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
+    }
+
+    private int port = 8189;
+
     public Circle circleStartServer;
     public Label labelCountOfClients;
 
     public final String COUNT_CLIENTS = "Кол-во клиентов - ";
 
-    public void setServer(Server server) {
-        this.server = server;
-    }
-
     private Server server;
 
-    public void onActionSendIP(ActionEvent actionEvent) {
-    }
 
     public void onActionSetPort(ActionEvent actionEvent) {
-
+        port = Integer.parseInt(txtFldForPort.getText().trim());
     }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        txtFldForPort.setFocusTraversable(false);
+        btnStartServer.setFocusTraversable(true);
         labelCountOfClients.setText(COUNT_CLIENTS);
     }
 
     public void onActionStartServer(ActionEvent actionEvent) {
         if (server == null){
+            System.out.println("class Controller - создаём Сервер");
             server = new Server(this);
+
             Platform.runLater(() -> {
-                txtFldForPort.setText(String.valueOf(server.getPort()));
+                txtFldForPort.setText(String.valueOf(port));
                 btnStartServer.setText("Restart server");
             });
         } else {
             server.broadcastMsgEnd("/end");
-            txtAreaForConsole.clear();
             this.labelCountOfClients.setText(COUNT_CLIENTS);
             server.getThread().interrupt();
             try {
@@ -61,13 +66,8 @@ public class Controller implements Initializable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            System.out.println("class Controller - перезапускаем Сервер, номер порта - " + txtFldForPort.getText().trim());
             server = new Server(this);
         }
-    }
-
-    public void showInGUI(String info){
-        Platform.runLater(() -> {
-            txtAreaForConsole.appendText(info);
-        });
     }
 }

@@ -20,12 +20,11 @@ public class AuthController implements Initializable {
     public Label labelSecToClose;
     public TextField txtFldNameHost;
     public Button btnSetNameHost;
-    public TextArea txtAreaForConsole;
     public TextField txtFldForPort;
 
     public void setTimeout(int timeout) {
         this.timeout = timeout/1000;
-        System.out.println(String.format("timeout = %s sec", this.timeout));
+        System.out.println(String.format("class AuthController - timeout = %s sec", this.timeout));
     }
 
     private int timeout;
@@ -41,7 +40,7 @@ public class AuthController implements Initializable {
 
     public void setAuthentication(boolean authentication) {
         isAuthentication = authentication;
-        System.out.println("Аутентификация - " + authentication);
+        System.out.println("class AuthController - Аутентификация - " + authentication);
     }
 
     private boolean isAuthentication;
@@ -56,7 +55,7 @@ public class AuthController implements Initializable {
     private RegController regController;
 
     public void onActionRegBtn(ActionEvent actionEvent) {
-        System.out.println("Попытка регистрации");
+        System.out.println("class AuthController - Попытка регистрации");
         if (readWriteNetHandler.getSocket() == null || readWriteNetHandler.getSocket().isClosed()){
             readWriteNetHandler.connectAndReadChat();
         }
@@ -71,6 +70,7 @@ public class AuthController implements Initializable {
     }
 
     public void onActionLoginBtn(ActionEvent actionEvent) {
+        System.out.println("class AuthController - нажали кнопку - войти");
         if (readWriteNetHandler.getSocket() == null || readWriteNetHandler.getSocket().isClosed()){
             readWriteNetHandler.connectAndReadChat();
         }
@@ -87,7 +87,7 @@ public class AuthController implements Initializable {
                 while (!isAuthentication){
                     try {
                         Thread.sleep(1000);
-                        System.out.println(Thread.currentThread().getName() + " - до конца аутентификации осталось - " + (timeout -= 1));
+                        System.out.println("class AuthController - " + Thread.currentThread().getName() + " - до конца аутентификации осталось - " + (timeout -= 1));
                         Platform.runLater(() -> {
                             labelSecToClose.setText(String.valueOf(timeout));
                         });
@@ -100,7 +100,7 @@ public class AuthController implements Initializable {
                         });
                         break;
                     }
-                    System.out.println(Thread.currentThread().getName() + " isAuthentication - " + isAuthentication);
+                    System.out.println("class AuthController - " + Thread.currentThread().getName() + " - isAuthentication - " + isAuthentication);
                     }
                     if (isAuthentication){
                         Platform.runLater(() -> {
@@ -131,7 +131,6 @@ public class AuthController implements Initializable {
         try {
             parent = loader.load();
         } catch (IOException | IllegalStateException e) {
-            txtAreaForConsole.appendText(e.toString());
             System.out.println(e.getMessage());
             e.printStackTrace();
         }

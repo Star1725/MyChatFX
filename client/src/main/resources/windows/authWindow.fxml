@@ -4,7 +4,7 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane prefHeight="600.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AuthController">
+<AnchorPane prefHeight="300.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="client.controllers.AuthController">
    <children>
       <Button fx:id="regBtn" layoutX="153.0" layoutY="14.0" mnemonicParsing="false" onAction="#onActionRegBtn" prefHeight="31.0" prefWidth="133.0" text="Зарегистрироваться" wrapText="true" AnchorPane.rightAnchor="10.0" AnchorPane.topAnchor="10.0">
          <font>
@@ -14,13 +14,9 @@
       <TextField fx:id="loginTxtFld" layoutX="50.0" layoutY="54.0" promptText="Логин" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="55.0" />
       <PasswordField fx:id="passTxtFld" layoutX="50.0" layoutY="101.0" promptText="Пароль" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="90.0" />
       <Button fx:id="loginBtn" layoutX="50.0" layoutY="152.0" mnemonicParsing="false" onAction="#onActionLoginBtn" prefHeight="32.0" prefWidth="200.0" text="Войти" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="125.0" />
-      <Label fx:id="labelSecToClose" alignment="CENTER" layoutX="147.0" layoutY="177.0" AnchorPane.leftAnchor="190.0" AnchorPane.rightAnchor="190.0" AnchorPane.topAnchor="185.0" />
-      <TextField fx:id="txtFldNameHost" layoutX="50.0" layoutY="218.0" prefHeight="26.0" prefWidth="300.0" promptText="namehost (default - localhost)" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="218.0" />
-      <Button fx:id="btnSetNameHost" layoutX="177.0" layoutY="252.0" mnemonicParsing="false" onAction="#onActionSetNameHostAndPort" prefHeight="26.0" prefWidth="173.0" text="set namehost and port" AnchorPane.leftAnchor="177.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="252.0" />
-      <TextField fx:id="txtFldForPort" layoutX="50.0" layoutY="252.0" prefHeight="26.0" prefWidth="123.0" promptText="Port (default - 8189)" AnchorPane.leftAnchor="50.0" AnchorPane.topAnchor="252.0" />
-      <TextArea fx:id="txtAreaForConsole" layoutX="14.0" layoutY="286.0" prefHeight="200.0" prefWidth="200.0" scrollLeft="1.0" scrollTop="1.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="285.0">
-         <font>
-            <Font size="10.0" />
-         </font></TextArea>
+      <Label fx:id="labelSecToClose" alignment="CENTER" layoutX="191.0" layoutY="164.0" AnchorPane.leftAnchor="191.0" AnchorPane.rightAnchor="189.0" AnchorPane.topAnchor="164.0" />
+      <TextField fx:id="txtFldNameHost" layoutX="50.0" layoutY="218.0" prefHeight="26.0" prefWidth="300.0" promptText="namehost (default - localhost)" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="190.0" />
+      <Button fx:id="btnSetNameHost" layoutX="50.0" layoutY="261.0" mnemonicParsing="false" onAction="#onActionSetNameHostAndPort" prefHeight="26.0" prefWidth="300.0" text="set namehost and port" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="261.0" />
+      <TextField fx:id="txtFldForPort" layoutX="50.0" layoutY="225.0" prefHeight="26.0" prefWidth="300.0" promptText="Port (default - 8189)" AnchorPane.leftAnchor="50.0" AnchorPane.topAnchor="225.0" />
    </children>
 </AnchorPane>

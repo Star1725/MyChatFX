@@ -49,7 +49,7 @@ public class StartClient extends Application {
         modalWindowLoader.setLocation(getClass().getResource("/windows/authWindow.fxml"));
         Parent modalRoot = modalWindowLoader.load();
         authController = modalWindowLoader.getController();
-        modalStage.setScene(new Scene(modalRoot, 400, 800));
+        modalStage.setScene(new Scene(modalRoot, 400, 300));
         modalStage.setResizable(false);
         modalStage.initModality(Modality.WINDOW_MODAL);
         modalStage.initOwner(primaryStage);

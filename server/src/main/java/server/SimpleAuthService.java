@@ -30,10 +30,10 @@ public class SimpleAuthService implements AuthServiсe {
     }
 
     @Override
-    public Object[] getNickNameByLoginAndPassword(String login, String password) {
+    public String getNickNameByLoginAndPassword(String login, String password) {
         for (UserData userData : usersDataList) {
             if (userData.login.equals(login) && userData.password.equals(password)){
-                return new Object[]{userData.nickName};
+                return userData.nickName;
             }
         }
         return null;

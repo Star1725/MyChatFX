@@ -49,7 +49,7 @@ public class ReadWriteNetHandler {
     public void connectAndReadChat(){
         try {
             socket = new Socket(IPaddress, port);
-            System.out.println("socket: getInetAddress - " + socket.getInetAddress() + "\n" +
+            System.out.println("class ReadWriteNetHandler - socket: getInetAddress - " + socket.getInetAddress() + "\n" +
                     "        getReuseAddress - " + socket.getReuseAddress() + "\n" +
                     "        getLocalAddress - " + socket.getLocalAddress() + "\n" +
                     "        getLocalPort - " + socket.getLocalPort() + "\n" +
@@ -57,28 +57,17 @@ public class ReadWriteNetHandler {
                     "        getLocalSocketAddress - " + socket.getLocalSocketAddress() + "\n" +
                     "        getPort - " + socket.getPort() + "\n" +
                     "        getTcpNoDelay - " + socket.getTcpNoDelay());
-            showInGUI("socket: getInetAddress - " + socket.getInetAddress() + "\n" +
-                    "        getReuseAddress - " + socket.getReuseAddress() + "\n" +
-                    "        getLocalAddress - " + socket.getLocalAddress() + "\n" +
-                    "        getLocalPort - " + socket.getLocalPort() + "\n" +
-                    "        getRemoteSocketAddress - " + socket.getRemoteSocketAddress() + "\n" +
-                    "        getLocalSocketAddress - " + socket.getLocalSocketAddress() + "\n" +
-                    "        getPort - " + socket.getPort() + "\n" +
-                    "        getTcpNoDelay - " + socket.getTcpNoDelay() + "\n");
             inputStreamNet = new DataInputStream(socket.getInputStream());
             outputStreamNet = new DataOutputStream(socket.getOutputStream());
-            System.out.println("Создали поток для приема данных от сервера");
-            showInGUI("Создали поток для приема данных от сервера\n");
+            System.out.println("class ReadWriteNetHandler - Создали поток для приема данных от сервера");
             Thread threadReadMsgFromNet = new Thread(() -> {
                 try {
                     //аутентификация
                     while (true){
-                        System.out.println("Ждем данные аутентификации от сервера");
-                        showInGUI("Ждем данные аутентификации от сервера\n");
+                        System.out.println("class ReadWriteNetHandler - Ждем данные аутентификации от сервера");
                         String data = inputStreamNet.readUTF();
                         String[] token = data.split("\\s", 2);
-                        System.out.println("Цикл аутентификации получил от сервера данные: " + data);
-                        showInGUI("Цикл аутентификации получил от сервера данные: " + data + "\n");
+                        System.out.println("class ReadWriteNetHandler - Цикл аутентификации получил от сервера данные: " + data);
                         //установка timeout соединения при неудачной авторизации
                         if(data.startsWith("/timeout_on")){
                             authController.setTimeout(Integer.parseInt(token[1]));
@@ -87,68 +76,62 @@ public class ReadWriteNetHandler {
                             chatController.setTitle(token[1]);
                             break;
                         } else if(data.startsWith("/error1")){
-                            System.out.println("Показать окно ошибки \"" + data + "\"");
-                            showInGUI("Показать окно ошибки \"" + data + "\"\n");
+                            System.out.println("class ReadWriteNetHandler - Показать окно ошибки \"" + data + "\"");
                             authController.showAlertWindow("Ошибка", token[1]);
                         } else if (data.startsWith("/error2")){
-                            System.out.println("Показать окно ошибки \" " + data + "\"");
-                            showInGUI("Показать окно ошибки \" " + data + "\"\n");
+                            System.out.println("class ReadWriteNetHandler - Показать окно ошибки \" " + data + "\"");
                             authController.showAlertWindow("Ошибка", token[1]);
                         } else if (data.startsWith("/regok")){
-                            System.out.println("Показать окно удачной регистрации \" " + data + "\"");
-                            showInGUI("Показать окно удачной регистрации \" " + data + "\"\n");
+                            System.out.println("class ReadWriteNetHandler - Показать окно удачной регистрации \" " + data + "\"");
                             authController.showAlertWindow("Информация", token[1]);
                             Platform.runLater(() -> {
                                 authController.getRegStage().hide();
                             });
                         } else if (data.startsWith("/regno")) {
-                            System.out.println("Показать окно неудачной регистрации \" " + data + "\"");
-                            showInGUI("Показать окно неудачной регистрации \" " + data + "\"\n");
+                            System.out.println("class ReadWriteNetHandler - Показать окно неудачной регистрации \" " + data + "\"");
+
                             authController.showAlertWindow("Ошибка", token[1]);
                         } else if (data.startsWith("/endtime")) {
-                            System.out.println("Показать окно timeout \"" + data + "\"");
-                            showInGUI("Показать окно timeout \"" + data + "\"\n");
+                            System.out.println("class ReadWriteNetHandler - Показать окно timeout \"" + data + "\"");
                             authController.showAlertWindow("Ошибка", token[1]);
                             throw new IOException(token[1]);
                         }
                     }
                     //работа
                     while (true){
-                        System.out.println("Ждем сообщения от сервера");
-                        showInGUI("Ждем сообщения от сервера\n");
+                        System.out.println("class ReadWriteNetHandler - Цикл работы, ждем сообщения от сервера");
                         String msg = inputStreamNet.readUTF();
 
                         if (msg.startsWith("/")){
+                            System.out.println("class ReadWriteNetHandler - получили служебное:");
                             if (msg.equals("/end")){
+                                System.out.println("class ReadWriteNetHandler - " + msg);
                                 break;
                             }
                             if (msg.startsWith("/clientlist")){
-                                System.out.println("Разбиваем сообщение на слова");
+                                System.out.println("class ReadWriteNetHandler - " + msg + ".Разбиваем сообщение на слова");
                                 String[] token = msg.split("\\s+");
+                                System.out.println("class ReadWriteNetHandler - отдаём chatController.updatedListViewContacts()");
                                 chatController.updatedListViewContacts(token);
                             }
                             if (msg.startsWith("/w")){
-                                System.out.println("Клиент " + chatController.getNickName() + " получил личное сообщение " + msg);
-                                showInGUI("Клиент " + chatController.getNickName() + " получил личное сообщение " + msg + "\n");
+                                System.out.println("class ReadWriteNetHandler - получил личное сообщение " + msg);
                                 chatController.getMsg(msg);
                             }
                         } else {
-                            System.out.println("Клиент " + chatController.getNickName() + " получил сообщение " + msg);
-                            showInGUI("Клиент " + chatController.getNickName() + " получил сообщение " + msg + "\n");
+                            System.out.println("class ReadWriteNetHandler - получил all сообщение " + msg);
                             chatController.getMsg(msg);
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    System.out.println("Client " + chatController.getNickName() + " disconnect from server");
-                    showInGUI("Client " + chatController.getNickName() + " disconnect from server\n");
+                    System.out.println("class ReadWriteNetHandler - disconnect from server");
                     try {
                         socket.close();
+                        authController.setAuthentication(false);
                         Platform.runLater(() -> {
-                            authController.setAuthentication(false);
-                            chatController.splitPaneMainWindow.getItems().remove(0);
-                            chatController.vBoxForFieldChat.setVisible(false);
+                            chatController.splitPaneMainWindow.setVisible(false);
                             ((Stage)authController.loginBtn.getScene().getWindow()).show();
                         });
                     } catch (IOException e) {
@@ -163,17 +146,10 @@ public class ReadWriteNetHandler {
         }
     }
 
-    private void showInGUI(String str) {
-        Platform.runLater(() -> {
-            authController.txtAreaForConsole.appendText(str);
-        });
-    }
-
     public void sendMsg(String msg){
         try {
             outputStreamNet.writeUTF(msg);
-            System.out.println("Клиент отправил сообщение: " + msg);
-            showInGUI("Клиент отправил сообщение: " + msg + "\n");
+            System.out.println("class ReadWriteNetHandler - отправил сообщение: " + msg);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -183,8 +159,7 @@ public class ReadWriteNetHandler {
         if (socket != null || socket.isClosed()){
             System.out.println(socket.toString());
             try {
-                System.out.println("Отправляем сереверу логин: " + log + " и пароль: " + pas);
-                showInGUI("Отправляем сереверу логин: " + log + " и пароль: " + pas + "\n");
+                System.out.println("class ReadWriteNetHandler - Отправляем сереверу логин: " + log + " и пароль: " + pas);
                 outputStreamNet.writeUTF(String.format("/auth %s %s", log, pas));
             } catch (IOException e) {
                 e.printStackTrace();

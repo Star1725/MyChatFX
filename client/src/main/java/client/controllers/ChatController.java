@@ -5,6 +5,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
@@ -68,9 +69,8 @@ public class ChatController implements Initializable{
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
-        //скрытие списка контактов
-        splitPaneMainWindow.getItems().remove(0);
-        vBoxForFieldChat.setVisible(true);
+        //скрытие чата контактов
+        splitPaneMainWindow.setVisible(false);
     }
 
     @FXML
@@ -84,6 +84,7 @@ public class ChatController implements Initializable{
 
     private void sendAndCreateMsg() {
         String msg = textFieldForSend.getText().trim();
+        System.out.println("class ChatController - sendAndCreateMsg()");
         readWriteNetHandler.sendMsg(String.format("%s %s", getCurTime(FLAG_DATE), msg));
         createGUIMessageForChat(true, msg);
     }
@@ -103,19 +104,19 @@ public class ChatController implements Initializable{
                     String[] token = msg.split("\\s", 3);
                     msg = token[2];
                     privateMsgFor = "(личное для " + token[1] + ")";
-                    System.out.println("createMessage" + privateMsgFor + " - " + msg );
+                    System.out.println("class ChatController - create my message for myGUI - " + privateMsgFor + " - " + msg );
                 }
                 //личное сообщение из чата
             } else if (msg.startsWith("/w")){
                 String[] token = msg.split("\\s", 3);
                 msg = token[2];
-                System.out.println("private createMessage - " + msg );
+                System.out.println("class ChatController - create private message from server for myGUI - " + msg );
                 sendName = token[1];
                 privateMsgFor = "(личное)";
             } else {//общее сообщение из чата
                 String[] token = msg.split("\\s", 2);
                 msg = token[1];
-                System.out.println("createMessage - " + msg );
+                System.out.println("class ChatController - create all message from server for myGUI - " + msg );
                 sendName = token[0];
             }
 
@@ -161,20 +162,20 @@ public class ChatController implements Initializable{
     public void setTitle(String nickName){
         setNickName(nickName);
         Platform.runLater(() -> {
-            ((Stage) vBoxForFieldChat.getScene().getWindow()).setTitle(TITLE + " для " + nickName);
+            splitPaneMainWindow.setVisible(true);
             //отображение списка контактов
             if (splitPaneMainWindow.getItems().size() == 1){
                 splitPaneMainWindow.getItems().add(0, anchPanelListContacts);
             }
             splitPaneMainWindow.setDividerPosition(0, 0.3);
+            System.out.println(vBoxForFieldChat.getScene().toString());
+            ((Stage) vBoxForFieldChat.getScene().getWindow()).setTitle(TITLE + " для " + nickName);
         });
     }
 
     public void updatedListViewContacts(String[] token){
         Platform.runLater(() -> {
-            //System.out.println("GUI Thread is start");
             listContacts.getItems().clear();
-            //System.out.println("Очистили список");
             for (int i = 1; i < token.length; i++) {
                 System.out.println(token[i]);
                 if (token[i].equals(nickName)){
@@ -182,7 +183,7 @@ public class ChatController implements Initializable{
                 }
                 listContacts.getItems().add(token[i]);
             }
-            System.out.println("Вывели новый список");
+            System.out.println("class ChatController - create - Вывели список clients");
         });
     }
 }

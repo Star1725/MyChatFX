@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 
-public class DatabaseHandler implements AuthServiсe{
+public class DatabaseHandler {
 
     private static final String CLIENTS_TABLE = "clients";
     private static final String CLIENTS_COLUMN_ID = "id_clients";
@@ -20,21 +20,14 @@ public class DatabaseHandler implements AuthServiсe{
     private static final String MESSAGES_COLUMN_DATE_RECEIPT = "date_of_receipt";
     private static final String MESSAGES_COLUMN_MSG = "msg";
 
-    private String nickName;
-
-    public Controller getController() {
-        return controller;
-    }
-    private final Controller controller;
-
-    public DatabaseHandler(Controller controller) {
-        this.controller = controller;
-        createdFileDB(controller);
-    }
+    private static PreparedStatement psGetNickName;
+    private static PreparedStatement psReg;
+    private static PreparedStatement psChangeNickName;
+    private static PreparedStatement psInsertClientMsg;
+    private static PreparedStatement psUploadMsgForClient;
 
     private static Connection connection;
     private static Statement statement;
-    private static PreparedStatement preparedStatement;
 
     public static void connect(){
         try {
@@ -44,19 +37,21 @@ public class DatabaseHandler implements AuthServiсe{
         }
         try {
             connection = DriverManager.getConnection("jdbc:sqlite:myDB.db");
-            statement = connection.createStatement();
+            System.out.println("class DatabaseHandler - connect with myDB");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
     }
 
     public static void createTablesInDB(){
+        connect();
         try {
+            statement = connection.createStatement();
             statement.execute("CREATE TABLE if not exists " + CLIENTS_TABLE + " ( " +
                     CLIENTS_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
-                    CLIENTS_COLUMN_LOGIN + " TEXT, " +
+                    CLIENTS_COLUMN_LOGIN + " TEXT UNIQUE, " +
                     CLIENTS_COLUMN_PASSWORD + " TEXT, " +
-                    CLIENTS_COLUMN_NICKNAME + " TEXT);");
+                    CLIENTS_COLUMN_NICKNAME + " TEXT UNIQUE);");
             statement.execute("CREATE TABLE if not exists " + MESSAGES_TABLE + " (" +
                     MESSAGES_COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                     MESSAGES_COLUMN_FLAG + " TEXT," +
@@ -64,18 +59,58 @@ public class DatabaseHandler implements AuthServiсe{
                     MESSAGES_COLUMN_ID_RECEIVER + " INTEGER," +
                     MESSAGES_COLUMN_DATE_RECEIPT + " TEXT," +
                     MESSAGES_COLUMN_MSG + " TEXT);");
+            System.out.println("class DatabaseHandler - created tables \"clients\" and \"messages\" in myDB");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
     }
 
-    public static void insertClientsDAtaInDB(String login, String password, String nickname) throws SQLException {
-        preparedStatement = connection.prepareStatement("INSERT INTO clients (login, password, nickname) VALUES (?, ?, ?);");
-        preparedStatement.setString(1, login);
-        preparedStatement.setString(2, password);
-        preparedStatement.setString(3, nickname);
-        preparedStatement.executeUpdate();
+    public static void preparedAllStatements(){
+        connect();
+        try {
+            psReg = connection.prepareStatement("INSERT INTO " + CLIENTS_TABLE +
+                    "(" + CLIENTS_COLUMN_LOGIN + ", " + CLIENTS_COLUMN_PASSWORD + ", " + CLIENTS_COLUMN_NICKNAME + ")" +
+                    " VALUES (?, ?, ?);");
+            psGetNickName = connection.prepareStatement("SELECT " + CLIENTS_COLUMN_NICKNAME + " FROM "+ CLIENTS_TABLE +
+                    " WHERE "+ CLIENTS_COLUMN_LOGIN +" = ? AND "+ CLIENTS_COLUMN_PASSWORD +" = ?;");
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
     }
+
+    public static synchronized boolean registration(String login, String password, String nickName){
+        try {
+            psReg.setString(1, login);
+            psReg.setString(2, password);
+            psReg.setString(3, nickName);
+            psReg.executeUpdate();
+            return true;
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+            return false;
+        }
+    }
+
+    public static String getNickNameByLoginAndPasswordFromDB(String login, String password){
+        String nickname = null;
+        try {
+            psGetNickName.setString(1, login);
+            psGetNickName.setString(2, password);
+            try (ResultSet resultSet = psGetNickName.executeQuery();){
+                while (resultSet.next()){
+                    if(resultSet.isClosed()) return null;
+                    else {
+                        nickname = resultSet.getString(1);
+                        System.out.println("class DatabaseHandler - полученны при аунтотификации следующие данные из БД - " + nickname);
+                    }
+                }
+            }
+        } catch (SQLException throwables) {
+            throwables.printStackTrace();
+        }
+        return nickname;
+    }
+
 
     public synchronized static void insertClientsMsgInDB(String flag, int idSender, int idReceiver, String date, String msg){
         connect();
@@ -98,132 +133,51 @@ public class DatabaseHandler implements AuthServiсe{
         disconnect();
     }
 
-    public static int checkClientsDataForReg(String login, String nickname) throws SQLException {
-        ResultSet resultSet = statement.executeQuery("SELECT COUNT(login), COUNT(nickname) FROM clients WHERE login = '" + login + "' OR nickname = '" + nickname + "';");
-        resultSet.next();
-        System.out.println("** Колво совпадений при регистрации - " + resultSet.getInt(1) + resultSet.getInt(2));
-        return (resultSet.getInt(1) + resultSet.getInt(2));
-    }
-
     public static void disconnect(){
         try {
             if (statement != null){statement.close();}
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        try {
-            if (preparedStatement != null){preparedStatement.close();}
+            if (psReg != null){psReg.close();}
+            if (psGetNickName != null){psGetNickName.close();}
+
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
         try {
             connection.close();
+            System.out.println("class DatabaseHandler - disconnect with myDB");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
     }
 
-    private void createdFileDB(Controller controller) {
-        File newFile = new File("myDB.db");
-        boolean created = false;
-        // создадим новый файл
-        try {
-            created = newFile.createNewFile();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        if(created){
-            logInConsoleAndGUI(controller, "** файл базы данных создан");
-            connect();
-            logInConsoleAndGUI(controller, "** connect with myDB");
-            createTablesInDB();
-            logInConsoleAndGUI(controller, "** created table \"clients\" in myDB");
-            disconnect();
-            logInConsoleAndGUI(controller, "** disconnect with myDB");
-        } else {
-            logInConsoleAndGUI(controller, "** файл myDB уже был создан");
-        }
-    }
 
-    @Override
-    public synchronized Object[] getNickNameByLoginAndPassword(String login, String password){
+    public static synchronized void uploadHistoryForClientHandler(ClientHandler clientHandler){
         connect();
-        logInConsoleAndGUI(controller, "** connect with myDB");
-        int id = 0;
-        String nickname = null;
-        try (PreparedStatement ps = connection.prepareStatement("SELECT " + CLIENTS_COLUMN_ID + " , " + CLIENTS_COLUMN_NICKNAME + " FROM " + CLIENTS_TABLE +
-                " WHERE login = ? AND password = ?;")){
-            ps.setString(1, login);
-            ps.setString(2, password);
-            try (ResultSet resultSet = ps.executeQuery();){
+        try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM " + MESSAGES_TABLE +
+                " INNER JON " + CLIENTS_TABLE +
+                " ON " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_SENDER + " AS Sender " + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
+                " OR " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_RECEIVER + " AS Receiver " + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
+                " WHERE " + MESSAGES_COLUMN_ID_SENDER + " = ? " +
+                " OR " + MESSAGES_COLUMN_ID_RECEIVER + " = ? " +
+                " OR " + MESSAGES_COLUMN_ID_RECEIVER + " = ?;")){
+//            ps.setInt(1, id);
+//            ps.setInt(1, id);
+            ps.setInt(1, 0);
+            try (ResultSet resultSet = ps.executeQuery()){
                 while (resultSet.next()){
-                    if(resultSet.isClosed()) return null;
-                    else {
-                        id = resultSet.getInt(1);
-                        nickname = resultSet.getString(1);
-                        System.out.println("** полученны при аунтотификации следующие данные - " + id + " - " + nickname);
-                    }
+                    System.out.print(resultSet.getInt(1) + " ");
+                    System.out.print(resultSet.getString(2) + " ");
+                    System.out.print(resultSet.getInt(3) + " ");
+                    System.out.print(resultSet.getInt(4) + " ");
+                    System.out.print(resultSet.getString(5) + " ");
+                    System.out.print(resultSet.getString(6) + " ");
                 }
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-        }
-        disconnect();
-        logInConsoleAndGUI(controller, "** disconnect with myDB");
-        return new Object[]{id, nickname};
-    }
-
-    @Override
-    public synchronized boolean registration(String login, String password, String nickName){
-        connect();
-        logInConsoleAndGUI(controller, "** connect with myDB");
-        try {
-            if (checkClientsDataForReg(login, nickName) != 0){
-                disconnect();
-                logInConsoleAndGUI(controller, "** disconnect with myDB");
-                return false;
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        try {
-            insertClientsDAtaInDB(login, password, nickName);
+        } finally {
             disconnect();
-            logInConsoleAndGUI(controller, "** disconnect with myDB");
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
         }
-        return true;
-    }
-
-    public synchronized void uploadHistoryForClientHandler(ClientHandler clientHandler){
-        String nicknameForQuery = clientHandler.getNickName();
-        ResultSet resultSet;
-        try {
-            resultSet = statement.executeQuery("SELECT * FROM " + MESSAGES_TABLE +
-                    " INNER JON " + CLIENTS_TABLE +
-                    " ON " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_SENDER + " AS Sender " + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
-                    " INNER JON " + CLIENTS_TABLE +
-                    " ON " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_RECEIVER + " AS Receiver " + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
-                    " WHERE Sender = " + nicknameForQuery + ";");
-            while (resultSet.next()){
-                System.out.print(resultSet.getInt(1));
-                System.out.print(resultSet.getInt(2));
-                System.out.print(resultSet.getString(3));
-                System.out.print(resultSet.getString(4));
-                System.out.print(resultSet.getString(5));
-                System.out.print(resultSet.getString(6));
-
-            }
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-
-    }
-
-    private void logInConsoleAndGUI(Controller controller, String info) {
-        System.out.println(info);
-        controller.showInGUI(info + "\n");
     }
 }
 
