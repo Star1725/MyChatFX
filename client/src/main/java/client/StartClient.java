@@ -70,7 +70,10 @@ public class StartClient extends Application {
         readWriteNetHandler = new ReadWriteNetHandler(chatController, authController);
         chatController.setReadWriteNetHandler(readWriteNetHandler);
         authController.setReadWriteNetHandler(readWriteNetHandler);
+        authController.setChatController(chatController);
     }
+
+
 
     public static void main(String[] args) {
         launch(args);

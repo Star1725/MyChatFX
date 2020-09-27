@@ -39,8 +39,12 @@ public class AuthController implements Initializable {
     public Button loginBtn;
 
     public void setAuthentication(boolean authentication) {
+        System.out.println("*****************************************************************************" + authentication);
         isAuthentication = authentication;
-        System.out.println("class AuthController - Аутентификация - " + authentication);
+        if (authentication){
+            System.out.println("######################################################################");
+            chatController.setLogin(loginTxtFld.getText().trim());
+        }
     }
 
     private boolean isAuthentication;
@@ -52,6 +56,12 @@ public class AuthController implements Initializable {
     }
 
     private ReadWriteNetHandler readWriteNetHandler;
+
+    public void setChatController(ChatController chatController) {
+        this.chatController = chatController;
+    }
+
+    private ChatController chatController;
     private RegController regController;
 
     public void onActionRegBtn(ActionEvent actionEvent) {
@@ -103,6 +113,7 @@ public class AuthController implements Initializable {
                     System.out.println("class AuthController - " + Thread.currentThread().getName() + " - isAuthentication - " + isAuthentication);
                     }
                     if (isAuthentication){
+                        //chatController.setLogin(loginTxtFld.getText().trim());
                         Platform.runLater(() -> {
                             loginBtn.getScene().getWindow().hide();
                             labelSecToClose.setText("");

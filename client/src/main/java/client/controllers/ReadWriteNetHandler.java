@@ -78,8 +78,8 @@ public class ReadWriteNetHandler {
                         if(data.startsWith("/timeout_on")){
                             authController.setTimeout(Integer.parseInt(token[1]));
                         } else if (data.startsWith("/authok")){
-                            authController.setAuthentication(true);
                             chatController.setTitle(token[1]);
+                            authController.setAuthentication(true);
                             break;
                         } else if(data.startsWith("/error1")){
                             System.out.println("class ReadWriteNetHandler - Показать окно ошибки \"" + data + "\"");

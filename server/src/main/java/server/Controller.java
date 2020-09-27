@@ -61,6 +61,7 @@ public class Controller implements Initializable {
             server.broadcastMsgEnd("/end");
             this.labelCountOfClients.setText(COUNT_CLIENTS);
             server.getThread().interrupt();
+            DatabaseHandler.disconnect();
             try {
                 server.getServerSocket().close();
             } catch (IOException e) {

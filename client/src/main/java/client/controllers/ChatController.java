@@ -14,6 +14,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
+import java.io.*;
 import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -27,6 +28,32 @@ public class ChatController implements Initializable{
     private String receivName;
     private String dateMsg;
     private String msgForChat;
+    private File history;
+
+    public void setLogin(String login) {
+        if (history == null) {
+            history = new File(String.format("client/%s.txt", login));
+            boolean iscreated = false;
+            // создадим новый файл
+            try {
+                iscreated = history.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (iscreated)
+                System.out.println("**********************************class StartServer - файл истории создан");
+            else
+                System.out.println("**********************************class StartServer - файл истории уже был создан");
+        }
+        try (BufferedReader reader = new BufferedReader(new FileReader(history.getPath()))){
+            String str;
+            while ((str = reader.readLine()) != null){
+                createGUIMessageForChat(false, str);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 
     private static final String TITLE = "Флудилка";
     public ListView<String> listContacts;
@@ -63,10 +90,6 @@ public class ChatController implements Initializable{
 
     private String nickName;
 
-    public ReadWriteNetHandler getReadWriteNetHandler() {
-        return readWriteNetHandler;
-    }
-
     public void setReadWriteNetHandler(ReadWriteNetHandler readWriteNetHandler) {
         this.readWriteNetHandler = readWriteNetHandler;
     }
@@ -77,6 +100,8 @@ public class ChatController implements Initializable{
     public void initialize(URL location, ResourceBundle resources) {
         //скрытие чата контактов
         splitPaneMainWindow.setVisible(false);
+
+
     }
 
     @FXML
@@ -93,10 +118,12 @@ public class ChatController implements Initializable{
         System.out.println("class ChatController - sendAndCreateMsg()");
         readWriteNetHandler.sendMsg(String.format("%s %s", getCurTime(FLAG_DATE), msg));
         createGUIMessageForChat(true, msg);
+        insertMsgInLocalFiel(true, msg);
     }
     //метод для получения сообщения от readWriteNetHandler
     public void getMsg(String msg){
         createGUIMessageForChat(false, msg);
+        insertMsgInLocalFiel(false, msg);
     }
 
     private void createGUIMessageForChat(boolean isMyMsg, String msg){
@@ -109,15 +136,38 @@ public class ChatController implements Initializable{
                     String[] token = msg.split("\\s", 3);
                     String receiver = token[1];
                     msg = token[2];
-                    createdMsgFromMe(receiver, getCurTime(FLAG_TIME), msg);
+                    createdMsgFromMe(receiver, String.format("в %s", getCurTime(FLAG_TIME)), msg);
                     //общее сообщение для чата
                 } else {
-                    createdMsgFromMe("null", getCurTime(FLAG_TIME), msg);
+                    createdMsgFromMe("forAll", String.format("в %s", getCurTime(FLAG_TIME)), msg);
                 }
-                //сообщение из чата
-            } else
-                //сообщение, загруженное из истории
-                if (msg.startsWith("/his")){
+
+            } //сообщения из локальной истории
+            else if (msg.startsWith("/local")){
+                System.out.println("class ChatController - мои сообщения из файла локальной истории");
+                String[] locToken = msg.split("\\s", 5);
+                //мои сообщения
+                if (locToken[1].equals("true")){
+                    isMyMsg = true;
+                    if (locToken[4].startsWith("/w")){
+                        String[] strings = locToken[4].split("\\s", 3);
+                        createdMsgFromMe(strings[1], String.format("%s в %s", locToken[2], locToken[3]), strings[2]);
+                    } else {
+                        createdMsgFromMe("forAll", String.format("%s в %s", locToken[2], locToken[3]), locToken[4]);
+                    }
+                    //сообщения из чата
+                } else if (locToken[1].equals("false")){
+                    if (locToken[4].startsWith("/w")){
+                        String[] strings = locToken[4].split("\\s", 3);
+                        createdMsgForMe(strings[1], this.nickName, String.format("%s в %s", locToken[2], locToken[3]), strings[2]);
+                    } else {
+                        String[] strings = locToken[4].split("\\s", 2);
+                        createdMsgForMe(strings[0], "forAll", String.format("%s в %s", locToken[2], locToken[3]), strings[1]);
+                    }
+                }
+
+            } //сообщение из чата, загруженное из истории
+            else if (msg.startsWith("/his")){
                     System.out.println("class ChatController - сообщения, загруженные из истории");
                     String[] hisToken = msg.split("\\s", 6);
                     sendName = hisToken[1];
@@ -174,6 +224,17 @@ public class ChatController implements Initializable{
         }
     }
 
+    private void insertMsgInLocalFiel(boolean isMyMsg, String msg) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(history.getPath(), true))){
+            System.out.println("class ChatController - пишем в локальный файл истории");
+            if (msg.startsWith("/end")) return;
+            writer.write(String.format("%s %b %s %s\n", "/local", isMyMsg, getCurTime(FLAG_DATE), msg));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
     private void createdMsgForMe(String sendName,String receiver, String date, String msg) {
         this.sendName = sendName;
         dateMsg = date;
@@ -193,7 +254,7 @@ public class ChatController implements Initializable{
         dateMsg = date;
         privateMsgFor = "";
         //личное от меня
-        if (!receivName.equals("null")){
+        if (!receivName.equals("forAll")){
             privateMsgFor = "(личное для " + receivName + ")";
             System.out.println("class ChatController - create my message for myGUI - " + privateMsgFor + " - " + msg );
         //для всех
@@ -224,7 +285,6 @@ public class ChatController implements Initializable{
                 splitPaneMainWindow.getItems().add(0, anchPanelListContacts);
             }
             splitPaneMainWindow.setDividerPosition(0, 0.3);
-            System.out.println(vBoxForFieldChat.getScene().toString());
             ((Stage) vBoxForFieldChat.getScene().getWindow()).setTitle(TITLE + " для " + nickName);
         });
     }
@@ -233,13 +293,11 @@ public class ChatController implements Initializable{
         Platform.runLater(() -> {
             listContacts.getItems().clear();
             for (int i = 1; i < token.length; i++) {
-                System.out.println(token[i]);
                 if (token[i].equals(nickName)){
                     token[i] = String.format("%s (%s)", "Вы",token[i]);
                 }
                 listContacts.getItems().add(token[i]);
             }
-            System.out.println("class ChatController - create - Вывели список clients");
         });
     }
 }

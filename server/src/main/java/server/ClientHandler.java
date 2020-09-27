@@ -95,10 +95,12 @@ public class ClientHandler {
                             socket.setSoTimeout(0);
                         }
                     }
-                    //загрузка истории из БД
-                    System.out.println(StartServer.getCurTime() + "class ClientHandler - загрузка истории чата для " + this.nickName);
-                    DatabaseHandler.uploadHistoryForClientHandler(this.nickName, server);
-                    System.out.println(StartServer.getCurTime() + "class ClientHandler - загрузка истории чата для " + this.nickName + " окончена");
+
+///////////////////////загрузка истории из БД
+//                    System.out.println(StartServer.getCurTime() + "class ClientHandler - загрузка истории чата для " + this.nickName);
+//                    DatabaseHandler.uploadHistoryForClientHandler(this.nickName, server);
+//                    System.out.println(StartServer.getCurTime() + "class ClientHandler - загрузка истории чата для " + this.nickName + " окончена");
+
                     //работа
                     while (true){
                         System.out.println(StartServer.getCurTime() + "class ClientHandler - Цикл работы");
