@@ -139,9 +139,9 @@ public class AuthController implements Initializable {
             regStage.setScene(new Scene(parent, 400, 230));
             regController = loader.getController();
             regController.setReadWriteNetHandler(readWriteNetHandler);
+            readWriteNetHandler.setRegController(regController);
             regStage.initModality(Modality.APPLICATION_MODAL);
             regStage.setResizable(false);
-            regController.setAuthController(this);
     }
     
     @FXML

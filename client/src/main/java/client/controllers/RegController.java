@@ -18,12 +18,6 @@ public class RegController {
 
     ReadWriteNetHandler readWriteNetHandler;
 
-    public void setAuthController(AuthController authController) {
-        this.authController = authController;
-    }
-
-    AuthController authController;
-
     public void onActionTryRegBtn(ActionEvent actionEvent) {
         if (readWriteNetHandler.getSocket() == null || readWriteNetHandler.getSocket().isClosed()){
             readWriteNetHandler.connectAndReadChat();

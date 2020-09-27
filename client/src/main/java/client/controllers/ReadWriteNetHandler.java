@@ -41,6 +41,12 @@ public class ReadWriteNetHandler {
 
     private AuthController authController;
 
+    public void setRegController(RegController regController) {
+        this.regController = regController;
+    }
+
+    private RegController regController;
+
     public ReadWriteNetHandler(ChatController chatController, AuthController authController) {
         this.chatController = chatController;
         this.authController = authController;
@@ -89,8 +95,12 @@ public class ReadWriteNetHandler {
                             });
                         } else if (data.startsWith("/regno")) {
                             System.out.println("class ReadWriteNetHandler - Показать окно неудачной регистрации \" " + data + "\"");
-
                             authController.showAlertWindow("Ошибка", token[1]);
+                            regController.loginTxtFldForReg.clear();
+                            regController.nickNameTxtFldForReg.clear();
+                            regController.passTxtFldForReg.clear();
+                            regController.passTxtFldForRegConfirm.clear();
+
                         } else if (data.startsWith("/endtime")) {
                             System.out.println("class ReadWriteNetHandler - Показать окно timeout \"" + data + "\"");
                             authController.showAlertWindow("Ошибка", token[1]);
@@ -118,6 +128,10 @@ public class ReadWriteNetHandler {
                                 System.out.println("class ReadWriteNetHandler - получил личное сообщение " + msg);
                                 chatController.getMsg(msg);
                             }
+                            if (msg.startsWith("/his")){
+                                System.out.println("class ReadWriteNetHandler - получил сообщение из истории чата " + msg);
+                                chatController.getMsg(msg);
+                            }
                         } else {
                             System.out.println("class ReadWriteNetHandler - получил all сообщение " + msg);
                             chatController.getMsg(msg);
@@ -131,6 +145,7 @@ public class ReadWriteNetHandler {
                         socket.close();
                         authController.setAuthentication(false);
                         Platform.runLater(() -> {
+                            chatController.vBoxForFieldChat.getChildren().clear();
                             chatController.splitPaneMainWindow.setVisible(false);
                             ((Stage)authController.loginBtn.getScene().getWindow()).show();
                         });

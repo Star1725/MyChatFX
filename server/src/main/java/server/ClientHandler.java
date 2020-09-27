@@ -11,7 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 public class ClientHandler {
-    private static final int TIMEOUT_CLOSE_CONNECT = 5000;
+    private static final int TIMEOUT_CLOSE_CONNECT = 15000;
     private Server server;
     private Socket socket;
 
@@ -96,7 +96,9 @@ public class ClientHandler {
                         }
                     }
                     //загрузка истории из БД
-                    //DatabaseHandler.uploadHistoryForClientHandler(this);
+                    System.out.println(StartServer.getCurTime() + "class ClientHandler - загрузка истории чата для " + this.nickName);
+                    DatabaseHandler.uploadHistoryForClientHandler(this.nickName, server);
+                    System.out.println(StartServer.getCurTime() + "class ClientHandler - загрузка истории чата для " + this.nickName + " окончена");
                     //работа
                     while (true){
                         System.out.println(StartServer.getCurTime() + "class ClientHandler - Цикл работы");
@@ -115,17 +117,17 @@ public class ClientHandler {
                             String forNickName = token[1];
                             msg = String.format("%s %s %s", token[0], this.nickName, token[2]);
                             System.out.println(StartServer.getCurTime() + "class ClientHandler - Сервер получил сообщение для " + forNickName + " от " + this.nickName + ": " + msg + " в " + token[2]);
-                            server.sendPrivatMsg(forNickName, msg);
-                            //запись сообщения в БД
-                            //DatabaseHandler.insertClientsMsgInDB(token[0], this.id, server.getIdForNickname(forNickName), dateGetMsgFromClient, token[2]);
+                            server.sendPrivateMsg(forNickName, msg);
+                            //запись личного сообщения в БД
+                            DatabaseHandler.insertClientsMsgInDB("/his", this.nickName, forNickName, dateGetMsgFromClient, token[2]);
                             continue;
                         }
 
                         System.out.println(StartServer.getCurTime() + "class ClientHandler - Сервер получил сообщение для всех от " + this.nickName + ": " + msg);
                         //добавляем перед msg nickname, чтобы все знали от кого сообщение
                         server.broadcastMsg(msg, this);
-                        //запись сообщения в БД
-                        //DatabaseHandler.insertClientsMsgInDB("", this.id, 0, dateGetMsgFromClient, msg);
+                        //запись общего сообщения в БД
+                        DatabaseHandler.insertClientsMsgInDB("/his", this.nickName, "null", dateGetMsgFromClient, msg);
                     }
                 } catch (SocketTimeoutException e){
                     System.out.println(" class ClientHandler - " + e.getMessage());

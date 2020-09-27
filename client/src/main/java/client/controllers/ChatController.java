@@ -5,7 +5,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SplitPane;
@@ -23,6 +22,12 @@ import java.util.ResourceBundle;
 
 public class ChatController implements Initializable{
 
+    private String privateMsgFor = "";
+    private String sendName;
+    private String receivName;
+    private String dateMsg;
+    private String msgForChat;
+
     private static final String TITLE = "Флудилка";
     public ListView<String> listContacts;
     public AnchorPane anchPaneChatField;
@@ -32,6 +37,7 @@ public class ChatController implements Initializable{
 
     private static final int FLAG_TIME = 0;
     private static final int FLAG_DATE = 1;
+
 
     public void clickListClients(MouseEvent mouseEvent) {
         //различные нажатия на мышь
@@ -95,33 +101,54 @@ public class ChatController implements Initializable{
 
     private void createGUIMessageForChat(boolean isMyMsg, String msg){
         if (!msg.isEmpty()) {
-            String privateMsgFor = "";
-            String sendName;
-            //моё сообщение
-            if (isMyMsg){
-                sendName = "Вы";
-                if (msg.startsWith("/w")){//моё личное сообщение для
+            //мои сообщения
+            if (isMyMsg) {
+                System.out.println("class ChatController - мои сообщения для чата");
+                //личное для кого-то
+                if (msg.startsWith("/w")) {//моё личное сообщение для
                     String[] token = msg.split("\\s", 3);
+                    String receiver = token[1];
                     msg = token[2];
-                    privateMsgFor = "(личное для " + token[1] + ")";
-                    System.out.println("class ChatController - create my message for myGUI - " + privateMsgFor + " - " + msg );
+                    createdMsgFromMe(receiver, getCurTime(FLAG_TIME), msg);
+                    //общее сообщение для чата
+                } else {
+                    createdMsgFromMe("null", getCurTime(FLAG_TIME), msg);
                 }
+                //сообщение из чата
+            } else
+                //сообщение, загруженное из истории
+                if (msg.startsWith("/his")){
+                    System.out.println("class ChatController - сообщения, загруженные из истории");
+                    String[] hisToken = msg.split("\\s", 6);
+                    sendName = hisToken[1];
+                    receivName = hisToken[2];
+                    String date = String.format("%s в %s", hisToken[3], hisToken[4]);
+                    msg = hisToken[5];
+                    //моё сообщение
+                    if (sendName.equals(this.nickName)) {
+                        isMyMsg = createdMsgFromMe(receivName, date, msg);
+                    }
+                    //сообщение из чата
+                    else {
+                        createdMsgForMe(sendName, receivName, date, msg);
+                    }
                 //личное сообщение из чата
             } else if (msg.startsWith("/w")){
-                String[] token = msg.split("\\s", 3);
-                msg = token[2];
-                System.out.println("class ChatController - create private message from server for myGUI - " + msg );
-                sendName = token[1];
-                privateMsgFor = "(личное)";
-            } else {//общее сообщение из чата
-                String[] token = msg.split("\\s", 2);
-                msg = token[1];
-                System.out.println("class ChatController - create all message from server for myGUI - " + msg );
-                sendName = token[0];
+                    System.out.println("class ChatController - личное сообщение из чата");
+                    String[] token = msg.split("\\s", 3);
+                    sendName = token[1];
+                    msg = token[2];
+                    createdMsgForMe(sendName, this.nickName, getCurTime(FLAG_TIME), msg);
+                //сообщение из чата
+            } else {
+                    System.out.println("class ChatController - сообщение из чата");
+                    String[] token = msg.split("\\s", 2);
+                    System.out.println(token[0] + " " + token[1]);
+                    createdMsgForMe(token[0], "null", getCurTime(FLAG_TIME), token[1]);
             }
 
-            Label labelNameAndTime = new Label( sendName + " в " + getCurTime(FLAG_TIME) + " " + privateMsgFor);
-            Label labelMes = new Label(msg.trim());
+            Label labelNameAndTime = new Label( String.format("%s %s %s", sendName , dateMsg, privateMsgFor));
+            Label labelMes = new Label(msgForChat.trim());
             labelMes.setWrapText(true);
             labelMes.setBackground(new Background(new BackgroundFill(javafx.scene.paint.Color.WHITE, new CornerRadii(10),
                     null)));
@@ -145,6 +172,35 @@ public class ChatController implements Initializable{
                 textFieldForSend.clear();
             });
         }
+    }
+
+    private void createdMsgForMe(String sendName,String receiver, String date, String msg) {
+        this.sendName = sendName;
+        dateMsg = date;
+        msgForChat = msg;
+        privateMsgFor = "";
+        if (receiver.equals(this.nickName)){
+            privateMsgFor = "(личное)";
+            System.out.println("class ChatController - create message for me - " + privateMsgFor + " - " + msg );
+        } else {
+            System.out.println("class ChatController - create message for me - " + msg );
+        }
+    }
+
+    private boolean createdMsgFromMe(String receivName, String date, String msg) {
+        sendName = "Вы";
+        msgForChat = msg;
+        dateMsg = date;
+        privateMsgFor = "";
+        //личное от меня
+        if (!receivName.equals("null")){
+            privateMsgFor = "(личное для " + receivName + ")";
+            System.out.println("class ChatController - create my message for myGUI - " + privateMsgFor + " - " + msg );
+        //для всех
+        } else {
+            System.out.println("class ChatController - create my message for myGUI - " + msg );
+        }
+        return true;
     }
 
     private String getCurTime(int flagTimeOrDate) {

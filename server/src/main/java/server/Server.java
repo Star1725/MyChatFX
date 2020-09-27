@@ -20,8 +20,6 @@ public class Server {
     }
     private AuthServiсe authServiсe;
 
-
-
     public ServerSocket getServerSocket() {
         return serverSocket;
     }
@@ -45,8 +43,8 @@ public class Server {
         getAndShowCountClients(controller, clients.size());
         //authServiсe = new SimpleAuthService();
         authServiсe = new DatabaseAuthService();
-
         DatabaseHandler.preparedAllStatements();
+
         thread = new Thread(() -> {
             try {
                 serverSocket = new ServerSocket(controller.getPort());
@@ -95,7 +93,7 @@ public class Server {
         }
     }
 
-    public void sendPrivatMsg(String forNickName, String msg) {
+    public void sendPrivateMsg(String forNickName, String msg) {
         for (ClientHandler client : clients) {
             if (client.getNickName().equals(forNickName)){
                 client.sendMsg(msg);

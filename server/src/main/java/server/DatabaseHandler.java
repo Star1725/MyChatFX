@@ -60,6 +60,7 @@ public class DatabaseHandler {
                     MESSAGES_COLUMN_DATE_RECEIPT + " TEXT," +
                     MESSAGES_COLUMN_MSG + " TEXT);");
             System.out.println("class DatabaseHandler - created tables \"clients\" and \"messages\" in myDB");
+            disconnect();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -67,12 +68,48 @@ public class DatabaseHandler {
 
     public static void preparedAllStatements(){
         connect();
+        System.out.println("class DatabaseHandler - созданы preparedAllStatements");
         try {
             psReg = connection.prepareStatement("INSERT INTO " + CLIENTS_TABLE +
-                    "(" + CLIENTS_COLUMN_LOGIN + ", " + CLIENTS_COLUMN_PASSWORD + ", " + CLIENTS_COLUMN_NICKNAME + ")" +
+                    "(" + CLIENTS_COLUMN_LOGIN +
+                    ", " + CLIENTS_COLUMN_PASSWORD +
+                    ", " + CLIENTS_COLUMN_NICKNAME + ")" +
                     " VALUES (?, ?, ?);");
             psGetNickName = connection.prepareStatement("SELECT " + CLIENTS_COLUMN_NICKNAME + " FROM "+ CLIENTS_TABLE +
                     " WHERE "+ CLIENTS_COLUMN_LOGIN +" = ? AND "+ CLIENTS_COLUMN_PASSWORD +" = ?;");
+
+            psInsertClientMsg = connection.prepareStatement("INSERT INTO " + MESSAGES_TABLE + " (" +
+                    MESSAGES_COLUMN_FLAG + " , " +
+                    MESSAGES_COLUMN_ID_SENDER + " , " +
+                    MESSAGES_COLUMN_ID_RECEIVER + " , " +
+                    MESSAGES_COLUMN_DATE_RECEIPT + " , " +
+                    MESSAGES_COLUMN_MSG +
+                    ") VALUES (?, " +
+                    "( SELECT " + CLIENTS_COLUMN_ID + " FROM " + CLIENTS_TABLE + " WHERE " + CLIENTS_COLUMN_NICKNAME + " = ?), " +
+                    "( SELECT " + CLIENTS_COLUMN_ID + " FROM " + CLIENTS_TABLE + " WHERE " + CLIENTS_COLUMN_NICKNAME + " = ?), " +
+                    " ?, ?);");
+
+            psUploadMsgForClient = connection.prepareStatement("SELECT\n" +
+                    "flag,\n" +
+                    "(SELECT nickname FROM clients WHERE id_clients = id_sender) as sender,\n" +
+                    "(SELECT nickname FROM clients WHERE id_clients = id_receiver) as receiver,\n" +
+                    "date_of_receipt,\n" +
+                    "msg\n" +
+                    "FROM messages\n" +
+                    "WHERE id_sender = (SELECT id_clients FROM clients WHERE nickname = ?)\n" +
+                    "OR id_receiver = (SELECT id_clients FROM clients WHERE nickname = ?)\n" +
+                    "OR id_receiver = (SELECT id_clients FROM clients WHERE nickname = 'null');");
+
+//            psUploadMsgForClient = connection.prepareStatement("SELECT " +
+////                    MESSAGES_COLUMN_FLAG + ", " +
+//                    "(SELECT " + CLIENTS_COLUMN_NICKNAME + " FROM " + CLIENTS_TABLE + " WHERE " + CLIENTS_COLUMN_ID + " = " + MESSAGES_COLUMN_ID_SENDER + " ), " +
+//                    "(SELECT " + CLIENTS_COLUMN_NICKNAME + " FROM " + CLIENTS_TABLE + " WHERE " + CLIENTS_COLUMN_ID + " = " + MESSAGES_COLUMN_ID_RECEIVER + " ), " +
+//                    MESSAGES_COLUMN_DATE_RECEIPT + ", " +
+//                    MESSAGES_COLUMN_MSG +
+//                    " FROM " + MESSAGES_TABLE +
+//                    " WHERE " + MESSAGES_COLUMN_ID_SENDER + " = ( SELECT " + CLIENTS_COLUMN_ID + " FROM " + CLIENTS_TABLE + " WHERE " + CLIENTS_COLUMN_NICKNAME + " = ?) " +
+//                    " OR " + MESSAGES_COLUMN_ID_RECEIVER + " = ( SELECT " + CLIENTS_COLUMN_ID + " FROM " + CLIENTS_TABLE + " WHERE " + CLIENTS_COLUMN_NICKNAME + " = ?) " +
+//                    " OR " + MESSAGES_COLUMN_ID_RECEIVER + " = ( SELECT " + CLIENTS_COLUMN_ID + " FROM " + CLIENTS_TABLE + " WHERE " + CLIENTS_COLUMN_NICKNAME + " = 'null');");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -80,8 +117,11 @@ public class DatabaseHandler {
 
     public static synchronized boolean registration(String login, String password, String nickName){
         try {
+            System.out.println("Login - " + login);
             psReg.setString(1, login);
+            System.out.println("Pass - " + password);
             psReg.setString(2, password);
+            System.out.println("Nickname - " + nickName);
             psReg.setString(3, nickName);
             psReg.executeUpdate();
             return true;
@@ -111,26 +151,18 @@ public class DatabaseHandler {
         return nickname;
     }
 
-
-    public synchronized static void insertClientsMsgInDB(String flag, int idSender, int idReceiver, String date, String msg){
-        connect();
-        try (PreparedStatement ps = connection.prepareStatement("INSERT INTO " + MESSAGES_TABLE + " (" +
-                MESSAGES_COLUMN_FLAG + " , " +
-                MESSAGES_COLUMN_ID_SENDER + " , " +
-                MESSAGES_COLUMN_ID_RECEIVER + " , " +
-                MESSAGES_COLUMN_DATE_RECEIPT + " , " +
-                MESSAGES_COLUMN_MSG +
-                ") VALUES (?, ?, ?, ?, ?);");){
-            ps.setString(1, flag);
-            ps.setInt(2, idSender);
-            ps.setInt(3, idReceiver);
-            ps.setString(4, date);
-            ps.setString(5, msg);
-            ps.executeUpdate();
+    public synchronized static void insertClientsMsgInDB(String flag, String sender, String receiver, String date, String msg){
+        try {
+            System.out.println("class DatabaseHandler - добавляем в БД - флаг:" + flag + " sender:" + sender + " receiver:" + receiver + " date:" + date + " msg:" + msg);
+            psInsertClientMsg.setString(1, flag);
+            psInsertClientMsg.setString(2, sender);
+            psInsertClientMsg.setString(3, receiver);
+            psInsertClientMsg.setString(4, date);
+            psInsertClientMsg.setString(5, msg);
+            psInsertClientMsg.executeUpdate();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-        disconnect();
     }
 
     public static void disconnect(){
@@ -138,7 +170,6 @@ public class DatabaseHandler {
             if (statement != null){statement.close();}
             if (psReg != null){psReg.close();}
             if (psGetNickName != null){psGetNickName.close();}
-
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -150,33 +181,28 @@ public class DatabaseHandler {
         }
     }
 
-
-    public static synchronized void uploadHistoryForClientHandler(ClientHandler clientHandler){
-        connect();
-        try (PreparedStatement ps = connection.prepareStatement("SELECT * FROM " + MESSAGES_TABLE +
-                " INNER JON " + CLIENTS_TABLE +
-                " ON " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_SENDER + " AS Sender " + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
-                " OR " + MESSAGES_TABLE + "." + MESSAGES_COLUMN_ID_RECEIVER + " AS Receiver " + " = " + CLIENTS_TABLE + "." + CLIENTS_COLUMN_ID +
-                " WHERE " + MESSAGES_COLUMN_ID_SENDER + " = ? " +
-                " OR " + MESSAGES_COLUMN_ID_RECEIVER + " = ? " +
-                " OR " + MESSAGES_COLUMN_ID_RECEIVER + " = ?;")){
-//            ps.setInt(1, id);
-//            ps.setInt(1, id);
-            ps.setInt(1, 0);
-            try (ResultSet resultSet = ps.executeQuery()){
+    public static synchronized void uploadHistoryForClientHandler(String nickname, Server server){
+        try {
+            psUploadMsgForClient.setString(1, nickname);
+            psUploadMsgForClient.setString(2, nickname);
+            System.out.println("class DatabaseHandler - читаем историю сообщений для - " + nickname);
+            try (ResultSet resultSet = psUploadMsgForClient.executeQuery()){
                 while (resultSet.next()){
-                    System.out.print(resultSet.getInt(1) + " ");
-                    System.out.print(resultSet.getString(2) + " ");
-                    System.out.print(resultSet.getInt(3) + " ");
-                    System.out.print(resultSet.getInt(4) + " ");
-                    System.out.print(resultSet.getString(5) + " ");
-                    System.out.print(resultSet.getString(6) + " ");
+                    String flag = resultSet.getString(1);
+                    System.out.print(flag + " ");
+                    String sender = resultSet.getString(2);
+                    System.out.print(sender + " ");
+                    String receiver = resultSet.getString(3);
+                    System.out.print(receiver + " ");
+                    String date = resultSet.getString(4);
+                    System.out.print(date + " ");
+                    String msg = resultSet.getString(5);
+                    System.out.println(msg + " ");
+                    server.sendPrivateMsg(nickname, String.format("%s %s %s %s %s", flag, sender, receiver, date, msg));
                 }
             }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
-        } finally {
-            disconnect();
         }
     }
 }
