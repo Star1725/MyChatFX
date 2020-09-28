@@ -39,10 +39,8 @@ public class AuthController implements Initializable {
     public Button loginBtn;
 
     public void setAuthentication(boolean authentication) {
-        System.out.println("*****************************************************************************" + authentication);
         isAuthentication = authentication;
         if (authentication){
-            System.out.println("######################################################################");
             chatController.setLogin(loginTxtFld.getText().trim());
         }
     }

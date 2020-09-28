@@ -19,6 +19,8 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 public class ChatController implements Initializable{
@@ -41,15 +43,25 @@ public class ChatController implements Initializable{
                 e.printStackTrace();
             }
             if (iscreated)
-                System.out.println("**********************************class StartServer - файл истории создан");
+                System.out.println("class StartServer - файл истории создан");
             else
-                System.out.println("**********************************class StartServer - файл истории уже был создан");
+                System.out.println("class StartServer - файл истории уже был создан");
         }
         try (BufferedReader reader = new BufferedReader(new FileReader(history.getPath()))){
             String str;
+            LinkedList<String> temp = new LinkedList<>();
             while ((str = reader.readLine()) != null){
-                createGUIMessageForChat(false, str);
+                if (temp.size() < 5){
+                    temp.add(str);
+                } else {
+                    temp.removeFirst();
+                    temp.add(str);
+                }
             }
+            for (String s : temp) {
+                createGUIMessageForChat(false, s);
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -141,7 +153,6 @@ public class ChatController implements Initializable{
                 } else {
                     createdMsgFromMe("forAll", String.format("в %s", getCurTime(FLAG_TIME)), msg);
                 }
-
             } //сообщения из локальной истории
             else if (msg.startsWith("/local")){
                 System.out.println("class ChatController - мои сообщения из файла локальной истории");
