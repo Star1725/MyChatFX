@@ -15,11 +15,6 @@ public class ClientHandler {
     private Server server;
     private Socket socket;
 
-    public void setController(Controller controller) {
-        this.controller = controller;
-    }
-
-    private Controller controller;
     public String getNickName() {
         return nickName;
     }
@@ -38,16 +33,13 @@ public class ClientHandler {
         try {
             this.server = server;
             this.socket = socket;
-            this.controller = controller;
             inputStreamNet = new DataInputStream(socket.getInputStream());
             outputStreamNet = new DataOutputStream(socket.getOutputStream());
-            System.out.println("Start Thread ClientHandler");
             System.out.println(StartServer.getCurTime() + "class ClientHandler - Start Thread ClientHandler");
             Thread threadReadMsgFromNet = new Thread(() -> {
                 try {
                     //аутентификация
                     while (true){
-                        System.out.println(StartServer.getCurTime() + "class ClientHandler - Цикл аунтетификации");
                         String data = inputStreamNet.readUTF();
                         System.out.println(StartServer.getCurTime() + "class ClientHandler - Сервер получил данные аунтотификации " + data);
                         if (data.startsWith("/auth")){
@@ -97,9 +89,8 @@ public class ClientHandler {
                     }
 
 ///////////////////////загрузка истории из БД
-//                    System.out.println(StartServer.getCurTime() + "class ClientHandler - загрузка истории чата для " + this.nickName);
 //                    DatabaseHandler.uploadHistoryForClientHandler(this.nickName, server);
-//                    System.out.println(StartServer.getCurTime() + "class ClientHandler - загрузка истории чата для " + this.nickName + " окончена");
+
 
                     //работа
                     while (true){
@@ -109,24 +100,20 @@ public class ClientHandler {
                         String dateGetMsgFromClient = String.format("%s %s", globalToken[0], globalToken[1]);
                         msg = globalToken[2];
                         if (msg.startsWith("/end")){
-                            System.out.println(StartServer.getCurTime() + "class ClientHandler - Сервер получил служебное сообщение /end от " + this.getNickName());
                             outputStreamNet.writeUTF(msg);
                             break;
                         }
+                        //личное сообщение от кого-то
                         if (msg.startsWith("/w")){
-                            System.out.println(StartServer.getCurTime() + "class ClientHandler - Сервер получил служебное сообщение \"" + msg + "\" от " + this.getNickName());
                             String[] token = msg.split("\\s", 3);
                             String forNickName = token[1];
                             msg = String.format("%s %s %s", token[0], this.nickName, token[2]);
-                            System.out.println(StartServer.getCurTime() + "class ClientHandler - Сервер получил сообщение для " + forNickName + " от " + this.nickName + ": " + msg + " в " + token[2]);
                             server.sendPrivateMsg(forNickName, msg);
                             //запись личного сообщения в БД
                             DatabaseHandler.insertClientsMsgInDB("/his", this.nickName, forNickName, dateGetMsgFromClient, token[2]);
                             continue;
                         }
-
-                        System.out.println(StartServer.getCurTime() + "class ClientHandler - Сервер получил сообщение для всех от " + this.nickName + ": " + msg);
-                        //добавляем перед msg nickname, чтобы все знали от кого сообщение
+                        //сообщение для всех
                         server.broadcastMsg(msg, this);
                         //запись общего сообщения в БД
                         DatabaseHandler.insertClientsMsgInDB("/his", this.nickName, "null", dateGetMsgFromClient, msg);

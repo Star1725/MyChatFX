@@ -82,27 +82,18 @@ public class ReadWriteNetHandler {
                             authController.setAuthentication(true);
                             break;
                         } else if(data.startsWith("/error1")){
-                            System.out.println("class ReadWriteNetHandler - Показать окно ошибки \"" + data + "\"");
                             authController.showAlertWindow("Ошибка", token[1]);
                         } else if (data.startsWith("/error2")){
-                            System.out.println("class ReadWriteNetHandler - Показать окно ошибки \" " + data + "\"");
                             authController.showAlertWindow("Ошибка", token[1]);
                         } else if (data.startsWith("/regok")){
-                            System.out.println("class ReadWriteNetHandler - Показать окно удачной регистрации \" " + data + "\"");
                             authController.showAlertWindow("Информация", token[1]);
                             Platform.runLater(() -> {
                                 authController.getRegStage().hide();
                             });
                         } else if (data.startsWith("/regno")) {
-                            System.out.println("class ReadWriteNetHandler - Показать окно неудачной регистрации \" " + data + "\"");
                             authController.showAlertWindow("Ошибка", token[1]);
-                            regController.loginTxtFldForReg.clear();
-                            regController.nickNameTxtFldForReg.clear();
-                            regController.passTxtFldForReg.clear();
-                            regController.passTxtFldForRegConfirm.clear();
-
+                            clearTxtFldsForRegController();
                         } else if (data.startsWith("/endtime")) {
-                            System.out.println("class ReadWriteNetHandler - Показать окно timeout \"" + data + "\"");
                             authController.showAlertWindow("Ошибка", token[1]);
                             throw new IOException(token[1]);
                         }
@@ -111,17 +102,13 @@ public class ReadWriteNetHandler {
                     while (true){
                         System.out.println("class ReadWriteNetHandler - Цикл работы, ждем сообщения от сервера");
                         String msg = inputStreamNet.readUTF();
-
                         if (msg.startsWith("/")){
                             System.out.println("class ReadWriteNetHandler - получили служебное:");
                             if (msg.equals("/end")){
-                                System.out.println("class ReadWriteNetHandler - " + msg);
                                 break;
                             }
                             if (msg.startsWith("/clientlist")){
-                                System.out.println("class ReadWriteNetHandler - " + msg + ".Разбиваем сообщение на слова");
                                 String[] token = msg.split("\\s+");
-                                System.out.println("class ReadWriteNetHandler - отдаём chatController.updatedListViewContacts()");
                                 chatController.updatedListViewContacts(token);
                             }
                             if (msg.startsWith("/w")){
@@ -133,14 +120,12 @@ public class ReadWriteNetHandler {
                                 chatController.getMsg(msg);
                             }
                         } else {
-                            System.out.println("class ReadWriteNetHandler - получил all сообщение " + msg);
                             chatController.getMsg(msg);
                         }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    System.out.println("class ReadWriteNetHandler - disconnect from server");
                     try {
                         socket.close();
                         authController.setAuthentication(false);
@@ -159,6 +144,13 @@ public class ReadWriteNetHandler {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void clearTxtFldsForRegController() {
+        regController.loginTxtFldForReg.clear();
+        regController.nickNameTxtFldForReg.clear();
+        regController.passTxtFldForReg.clear();
+        regController.passTxtFldForRegConfirm.clear();
     }
 
     public void sendMsg(String msg){

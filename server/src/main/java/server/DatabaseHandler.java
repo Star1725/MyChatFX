@@ -68,7 +68,6 @@ public class DatabaseHandler {
 
     public static void preparedAllStatements(){
         connect();
-        System.out.println("class DatabaseHandler - созданы preparedAllStatements");
         try {
             psReg = connection.prepareStatement("INSERT INTO " + CLIENTS_TABLE +
                     "(" + CLIENTS_COLUMN_LOGIN +
@@ -117,11 +116,8 @@ public class DatabaseHandler {
 
     public static synchronized boolean registration(String login, String password, String nickName){
         try {
-            System.out.println("Login - " + login);
             psReg.setString(1, login);
-            System.out.println("Pass - " + password);
             psReg.setString(2, password);
-            System.out.println("Nickname - " + nickName);
             psReg.setString(3, nickName);
             psReg.executeUpdate();
             return true;
@@ -189,15 +185,10 @@ public class DatabaseHandler {
             try (ResultSet resultSet = psUploadMsgForClient.executeQuery()){
                 while (resultSet.next()){
                     String flag = resultSet.getString(1);
-                    System.out.print(flag + " ");
                     String sender = resultSet.getString(2);
-                    System.out.print(sender + " ");
                     String receiver = resultSet.getString(3);
-                    System.out.print(receiver + " ");
                     String date = resultSet.getString(4);
-                    System.out.print(date + " ");
                     String msg = resultSet.getString(5);
-                    System.out.println(msg + " ");
                     server.sendPrivateMsg(nickname, String.format("%s %s %s %s %s", flag, sender, receiver, date, msg));
                 }
             }

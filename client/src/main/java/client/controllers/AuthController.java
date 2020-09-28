@@ -15,7 +15,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class AuthController implements Initializable {
+public class AuthController {
     public Button regBtn;
     public Label labelSecToClose;
     public TextField txtFldNameHost;
@@ -41,7 +41,8 @@ public class AuthController implements Initializable {
     public void setAuthentication(boolean authentication) {
         isAuthentication = authentication;
         if (authentication){
-            chatController.setLogin(loginTxtFld.getText().trim());
+///////////////////////загрузка истории из локального файла
+            chatController.getLocalHistory(loginTxtFld.getText().trim());
         }
     }
 
@@ -63,7 +64,6 @@ public class AuthController implements Initializable {
     private RegController regController;
 
     public void onActionRegBtn(ActionEvent actionEvent) {
-        System.out.println("class AuthController - Попытка регистрации");
         if (readWriteNetHandler.getSocket() == null || readWriteNetHandler.getSocket().isClosed()){
             readWriteNetHandler.connectAndReadChat();
         }
@@ -108,15 +108,13 @@ public class AuthController implements Initializable {
                         });
                         break;
                     }
-                    System.out.println("class AuthController - " + Thread.currentThread().getName() + " - isAuthentication - " + isAuthentication);
-                    }
-                    if (isAuthentication){
-                        //chatController.setLogin(loginTxtFld.getText().trim());
-                        Platform.runLater(() -> {
-                            loginBtn.getScene().getWindow().hide();
-                            labelSecToClose.setText("");
-                        });
-                    }
+                }
+                if (isAuthentication){
+                    Platform.runLater(() -> {
+                        loginBtn.getScene().getWindow().hide();
+                        labelSecToClose.setText("");
+                    });
+                }
                 });
                 authThread.setDaemon(true);
                 authThread.start();
@@ -161,10 +159,6 @@ public class AuthController implements Initializable {
             txtFldNameHost.setText(readWriteNetHandler.getIPaddress());
             txtFldForPort.setText(String.valueOf(readWriteNetHandler.getPort()));
         });
-    }
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
     }
 }
 
