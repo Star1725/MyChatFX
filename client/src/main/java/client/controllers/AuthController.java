@@ -15,17 +15,16 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 
-public class AuthController implements Initializable {
+public class AuthController {
     public Button regBtn;
     public Label labelSecToClose;
     public TextField txtFldNameHost;
     public Button btnSetNameHost;
-    public TextArea txtAreaForConsole;
     public TextField txtFldForPort;
 
     public void setTimeout(int timeout) {
         this.timeout = timeout/1000;
-        System.out.println(String.format("timeout = %s sec", this.timeout));
+        System.out.println(String.format("class AuthController - timeout = %s sec", this.timeout));
     }
 
     private int timeout;
@@ -41,7 +40,10 @@ public class AuthController implements Initializable {
 
     public void setAuthentication(boolean authentication) {
         isAuthentication = authentication;
-        System.out.println("Аутентификация - " + authentication);
+        if (authentication){
+///////////////////////загрузка истории из локального файла
+            chatController.getLocalHistory(loginTxtFld.getText().trim());
+        }
     }
 
     private boolean isAuthentication;
@@ -53,10 +55,15 @@ public class AuthController implements Initializable {
     }
 
     private ReadWriteNetHandler readWriteNetHandler;
+
+    public void setChatController(ChatController chatController) {
+        this.chatController = chatController;
+    }
+
+    private ChatController chatController;
     private RegController regController;
 
     public void onActionRegBtn(ActionEvent actionEvent) {
-        System.out.println("Попытка регистрации");
         if (readWriteNetHandler.getSocket() == null || readWriteNetHandler.getSocket().isClosed()){
             readWriteNetHandler.connectAndReadChat();
         }
@@ -71,6 +78,7 @@ public class AuthController implements Initializable {
     }
 
     public void onActionLoginBtn(ActionEvent actionEvent) {
+        System.out.println("class AuthController - нажали кнопку - войти");
         if (readWriteNetHandler.getSocket() == null || readWriteNetHandler.getSocket().isClosed()){
             readWriteNetHandler.connectAndReadChat();
         }
@@ -87,7 +95,7 @@ public class AuthController implements Initializable {
                 while (!isAuthentication){
                     try {
                         Thread.sleep(1000);
-                        System.out.println(Thread.currentThread().getName() + " - до конца аутентификации осталось - " + (timeout -= 1));
+                        System.out.println("class AuthController - " + Thread.currentThread().getName() + " - до конца аутентификации осталось - " + (timeout -= 1));
                         Platform.runLater(() -> {
                             labelSecToClose.setText(String.valueOf(timeout));
                         });
@@ -100,14 +108,13 @@ public class AuthController implements Initializable {
                         });
                         break;
                     }
-                    System.out.println(Thread.currentThread().getName() + " isAuthentication - " + isAuthentication);
-                    }
-                    if (isAuthentication){
-                        Platform.runLater(() -> {
-                            loginBtn.getScene().getWindow().hide();
-                            labelSecToClose.setText("");
-                        });
-                    }
+                }
+                if (isAuthentication){
+                    Platform.runLater(() -> {
+                        loginBtn.getScene().getWindow().hide();
+                        labelSecToClose.setText("");
+                    });
+                }
                 });
                 authThread.setDaemon(true);
                 authThread.start();
@@ -131,7 +138,6 @@ public class AuthController implements Initializable {
         try {
             parent = loader.load();
         } catch (IOException | IllegalStateException e) {
-            txtAreaForConsole.appendText(e.toString());
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
@@ -140,9 +146,9 @@ public class AuthController implements Initializable {
             regStage.setScene(new Scene(parent, 400, 230));
             regController = loader.getController();
             regController.setReadWriteNetHandler(readWriteNetHandler);
+            readWriteNetHandler.setRegController(regController);
             regStage.initModality(Modality.APPLICATION_MODAL);
             regStage.setResizable(false);
-            regController.setAuthController(this);
     }
     
     @FXML
@@ -153,10 +159,6 @@ public class AuthController implements Initializable {
             txtFldNameHost.setText(readWriteNetHandler.getIPaddress());
             txtFldForPort.setText(String.valueOf(readWriteNetHandler.getPort()));
         });
-    }
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
     }
 }
 

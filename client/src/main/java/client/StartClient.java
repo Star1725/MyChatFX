@@ -49,7 +49,7 @@ public class StartClient extends Application {
         modalWindowLoader.setLocation(getClass().getResource("/windows/authWindow.fxml"));
         Parent modalRoot = modalWindowLoader.load();
         authController = modalWindowLoader.getController();
-        modalStage.setScene(new Scene(modalRoot, 400, 800));
+        modalStage.setScene(new Scene(modalRoot, 400, 300));
         modalStage.setResizable(false);
         modalStage.initModality(Modality.WINDOW_MODAL);
         modalStage.initOwner(primaryStage);
@@ -70,7 +70,10 @@ public class StartClient extends Application {
         readWriteNetHandler = new ReadWriteNetHandler(chatController, authController);
         chatController.setReadWriteNetHandler(readWriteNetHandler);
         authController.setReadWriteNetHandler(readWriteNetHandler);
+        authController.setChatController(chatController);
     }
+
+
 
     public static void main(String[] args) {
         launch(args);

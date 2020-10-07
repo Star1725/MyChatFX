@@ -6,6 +6,9 @@ import javafx.scene.paint.Color;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Vector;
 
@@ -16,17 +19,6 @@ public class Server {
         return authServiсe;
     }
     private AuthServiсe authServiсe;
-
-    public DatabaseHandler getDatabaseHandler() {
-        return databaseHandler;
-    }
-    private DatabaseHandler databaseHandler;
-
-    public int getPort() {
-        return port;
-    }
-
-    private int port = 8189;
 
     public ServerSocket getServerSocket() {
         return serverSocket;
@@ -50,24 +42,22 @@ public class Server {
         clients = new Vector<>();
         getAndShowCountClients(controller, clients.size());
         //authServiсe = new SimpleAuthService();
-        databaseHandler = new DatabaseHandler(controller);
-        if (!controller.txtFldForPort.getText().isEmpty()){
-            port = Integer.parseInt(controller.txtFldForPort.getText().trim());
-        }
+        authServiсe = new DatabaseAuthService();
+        DatabaseHandler.preparedAllStatements();
+
         thread = new Thread(() -> {
             try {
-                serverSocket = new ServerSocket(port);
-                logInConsoleAndGUI(controller, StartServer.getCurTime() + " - Server start\n" +
+                serverSocket = new ServerSocket(controller.getPort());
+                System.out.println(StartServer.getCurTime() + " class Server - Server start\n" +
                         "serverSocket: getInetAddress - " + serverSocket.getInetAddress() + "\n" +
                         "              getReuseAddress - " + serverSocket.getReuseAddress() + "\n" +
                         "              getLocalSocketAddress - " + serverSocket.getLocalSocketAddress() + "\n" +
-                        "              getLocalPort - " + serverSocket.getLocalPort() + "\n");
+                        "              getLocalPort - " + serverSocket.getLocalPort());
                 while (!Thread.currentThread().isInterrupted()){
-                    Platform.runLater(() -> {
-                        controller.circleStartServer.setFill(Color.GREEN);
-                    });
+                    Platform.runLater(() -> controller.circleStartServer.setFill(Color.GREEN));
+                    System.out.println(StartServer.getCurTime() + "class Server - ждем клиентов!!!\n");
                     Socket socket = serverSocket.accept();
-                    logInConsoleAndGUI(controller, StartServer.getCurTime() + " - connect client: " + socket.getRemoteSocketAddress() + "\n" +
+                    System.out.println(StartServer.getCurTime() + " class Server - - connect client: " + socket.getRemoteSocketAddress() + "\n" +
                             "socket: getInetAddress - " + socket.getInetAddress() + "\n" +
                             "        getReuseAddress - " + socket.getReuseAddress() + "\n" +
                             "        getLocalAddress - " + socket.getLocalAddress() + "\n" +
@@ -75,8 +65,8 @@ public class Server {
                             "        getRemoteSocketAddress - " + socket.getRemoteSocketAddress() + "\n" +
                             "        getLocalSocketAddress - " + socket.getLocalSocketAddress() + "\n" +
                             "        getPort - " + socket.getPort() + "\n" +
-                            "        getTcpNoDelay - " + socket.getTcpNoDelay() + "\n");
-                new ClientHandler(this, socket, controller, databaseHandler);
+                            "        getTcpNoDelay - " + socket.getTcpNoDelay());
+                new ClientHandler(this, socket, controller);
                 }
             }
             catch (IOException e) {
@@ -95,20 +85,15 @@ public class Server {
         thread.start();
     }
 
-    private void logInConsoleAndGUI(Controller controller, String info) {
-        System.out.println(info);
-        controller.showInGUI(info + "\n");
-    }
-
     public void broadcastMsg(String msgFromNickName, ClientHandler clientHandler){
         for (ClientHandler client : clients) {
             if (!client.equals(clientHandler)){
-                client.sendMsg(msgFromNickName);
+                client.sendMsg(String.format("%s %s", clientHandler.getNickName(), msgFromNickName));
             }
         }
     }
 
-    public void sendPrivatMsg(String forNickName, String msg) {
+    public void sendPrivateMsg(String forNickName, String msg) {
         for (ClientHandler client : clients) {
             if (client.getNickName().equals(forNickName)){
                 client.sendMsg(msg);
@@ -149,14 +134,18 @@ public class Server {
     }
 
     private void getAndShowCountClients(Controller controller, int count) {
-        Platform.runLater(() -> {
-            controller.labelCountOfClients.setText(String.format(controller.COUNT_CLIENTS + "%d", count));
-        });
+        Platform.runLater(() -> controller.labelCountOfClients.setText(String.format(controller.COUNT_CLIENTS + "%d", count)));
     }
 
     public void broadcastMsgEnd(String msg) {
         for (ClientHandler client : clients) {
             client.sendMsg(msg);
         }
+    }
+
+    private String getCurTime() {
+        Calendar calendar = Calendar.getInstance();
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        return dateFormat.format(calendar.getTime());
     }
 }
