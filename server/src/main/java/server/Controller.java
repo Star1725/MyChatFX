@@ -13,8 +13,11 @@ import java.io.IOException;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Controller implements Initializable {
+    private static final Logger logger= Logger.getLogger(StartServer.class.getName());
     public Button btnSendPort;
     public Button btnStartServer;
     public TextField txtFldForPort;
@@ -50,7 +53,7 @@ public class Controller implements Initializable {
 
     public void onActionStartServer(ActionEvent actionEvent) {
         if (server == null){
-            System.out.println("class Controller - создаём Сервер");
+            logger.log(Level.INFO, "создаём Сервер");
             server = new Server(this);
 
             Platform.runLater(() -> {
@@ -67,7 +70,7 @@ public class Controller implements Initializable {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println("class Controller - перезапускаем Сервер, номер порта - " + txtFldForPort.getText().trim());
+            logger.log(Level.INFO, "перезапускаем Сервер, номер порта - " + txtFldForPort.getText().trim());
             server = new Server(this);
         }
     }

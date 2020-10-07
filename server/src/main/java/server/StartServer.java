@@ -14,11 +14,14 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class StartServer extends Application {
 
     static boolean createdFileDB = false;
     Controller controller;
+    private static final Logger logger= Logger.getLogger(StartServer.class.getName());
 
     @Override
     public void start(Stage primaryStage) throws Exception{
@@ -26,16 +29,17 @@ public class StartServer extends Application {
         FXMLLoader mainWindowLoader = new FXMLLoader();
         mainWindowLoader.setLocation(getClass().getResource("../simpleGUIForServer.fxml"));
         Parent mainRoot = mainWindowLoader.load();
-        primaryStage.setTitle("GUI for server");
+        primaryStage.setTitle("GUI for server\n");
         primaryStage.setScene(new Scene(mainRoot, 600, 80));
-        System.out.println("show mainWindow");
+        logger.log(Level.INFO,"show mainWindow");
         primaryStage.show();
         primaryStage.setOnCloseRequest(new EventHandler<WindowEvent>() {
             @Override
             public void handle(WindowEvent event) {
                 DatabaseHandler.disconnect();
                 Platform.exit();
-                System.out.println("Server close");
+
+                logger.log(Level.INFO,"Server close");
             }
         });
         controller = mainWindowLoader.getController();
@@ -62,10 +66,11 @@ public class StartServer extends Application {
             e.printStackTrace();
         }
         if(createdFileDB){
-            System.out.println("class StartServer - файл базы данных создан");
+            //logger.log(Level.SEVERE,);
+            logger.log(Level.INFO,"файл базы данных создан");
             DatabaseHandler.createTablesInDB();
         }
-        else System.out.println("class StartServer - файл myDB уже был создан");
+        else logger.log(Level.INFO,"файл myDB уже был создан");
     }
 }
 

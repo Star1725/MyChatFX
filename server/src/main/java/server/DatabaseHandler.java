@@ -3,8 +3,11 @@ package server;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class DatabaseHandler {
+    private static final Logger logger= Logger.getLogger(StartServer.class.getName());
 
     private static final String CLIENTS_TABLE = "clients";
     private static final String CLIENTS_COLUMN_ID = "id_clients";
@@ -37,7 +40,7 @@ public class DatabaseHandler {
         }
         try {
             connection = DriverManager.getConnection("jdbc:sqlite:myDB.db");
-            System.out.println("class DatabaseHandler - connect with myDB");
+            logger.log(Level.INFO, "connect with myDB");
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -59,7 +62,7 @@ public class DatabaseHandler {
                     MESSAGES_COLUMN_ID_RECEIVER + " INTEGER," +
                     MESSAGES_COLUMN_DATE_RECEIPT + " TEXT," +
                     MESSAGES_COLUMN_MSG + " TEXT);");
-            System.out.println("class DatabaseHandler - created tables \"clients\" and \"messages\" in myDB");
+            logger.log(Level.INFO, "created tables \"clients\" and \"messages\" in myDB");
             disconnect();
         } catch (SQLException throwables) {
             throwables.printStackTrace();
@@ -137,7 +140,7 @@ public class DatabaseHandler {
                     if(resultSet.isClosed()) return null;
                     else {
                         nickname = resultSet.getString(1);
-                        System.out.println("class DatabaseHandler - полученны при аунтотификации следующие данные из БД - " + nickname);
+                        logger.log(Level.INFO, "полученны при аунтотификации следующие данные из БД - " + nickname);
                     }
                 }
             }
@@ -149,7 +152,7 @@ public class DatabaseHandler {
 
     public synchronized static void insertClientsMsgInDB(String flag, String sender, String receiver, String date, String msg){
         try {
-            System.out.println("class DatabaseHandler - добавляем в БД - флаг:" + flag + " sender:" + sender + " receiver:" + receiver + " date:" + date + " msg:" + msg);
+            logger.log(Level.INFO, "добавляем в БД - флаг:" + flag + " sender:" + sender + " receiver:" + receiver + " date:" + date + " msg:" + msg);
             psInsertClientMsg.setString(1, flag);
             psInsertClientMsg.setString(2, sender);
             psInsertClientMsg.setString(3, receiver);
@@ -170,8 +173,10 @@ public class DatabaseHandler {
             throwables.printStackTrace();
         }
         try {
+            if (connection != null){
             connection.close();
-            System.out.println("class DatabaseHandler - disconnect with myDB");
+            logger.log(Level.INFO, "disconnect with myDB");
+            }
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
@@ -181,7 +186,7 @@ public class DatabaseHandler {
         try {
             psUploadMsgForClient.setString(1, nickname);
             psUploadMsgForClient.setString(2, nickname);
-            System.out.println("class DatabaseHandler - читаем историю сообщений для - " + nickname);
+            logger.log(Level.INFO, "читаем историю сообщений для - " + nickname);
             try (ResultSet resultSet = psUploadMsgForClient.executeQuery()){
                 while (resultSet.next()){
                     String flag = resultSet.getString(1);

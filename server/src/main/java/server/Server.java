@@ -11,8 +11,11 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class Server {
+    private static final Logger logger= Logger.getLogger(StartServer.class.getName());
     private List<ClientHandler> clients;
 
     public AuthServiсe getAuthService() {
@@ -48,16 +51,16 @@ public class Server {
         thread = new Thread(() -> {
             try {
                 serverSocket = new ServerSocket(controller.getPort());
-                System.out.println(StartServer.getCurTime() + " class Server - Server start\n" +
+                logger.log(Level.INFO,"Server start\n" +
                         "serverSocket: getInetAddress - " + serverSocket.getInetAddress() + "\n" +
                         "              getReuseAddress - " + serverSocket.getReuseAddress() + "\n" +
                         "              getLocalSocketAddress - " + serverSocket.getLocalSocketAddress() + "\n" +
                         "              getLocalPort - " + serverSocket.getLocalPort());
                 while (!Thread.currentThread().isInterrupted()){
                     Platform.runLater(() -> controller.circleStartServer.setFill(Color.GREEN));
-                    System.out.println(StartServer.getCurTime() + "class Server - ждем клиентов!!!\n");
+                    logger.log(Level.INFO,"ждем клиентов!!!\n");
                     Socket socket = serverSocket.accept();
-                    System.out.println(StartServer.getCurTime() + " class Server - - connect client: " + socket.getRemoteSocketAddress() + "\n" +
+                    logger.log(Level.INFO,"connect client: " + socket.getRemoteSocketAddress() + "\n" +
                             "socket: getInetAddress - " + socket.getInetAddress() + "\n" +
                             "        getReuseAddress - " + socket.getReuseAddress() + "\n" +
                             "        getLocalAddress - " + socket.getLocalAddress() + "\n" +

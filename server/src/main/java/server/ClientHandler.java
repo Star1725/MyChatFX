@@ -9,8 +9,11 @@ import java.sql.SQLException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class ClientHandler {
+    private static final Logger logger= Logger.getLogger(StartServer.class.getName());
     private static final int TIMEOUT_CLOSE_CONNECT = 15000;
     private Server server;
     private Socket socket;
@@ -35,15 +38,15 @@ public class ClientHandler {
             this.socket = socket;
             inputStreamNet = new DataInputStream(socket.getInputStream());
             outputStreamNet = new DataOutputStream(socket.getOutputStream());
-            System.out.println(StartServer.getCurTime() + "class ClientHandler - Start Thread ClientHandler");
+            logger.log(Level.INFO,"Start Thread ClientHandler");
             Thread threadReadMsgFromNet = new Thread(() -> {
                 try {
                     //аутентификация
                     while (true){
                         String data = inputStreamNet.readUTF();
-                        System.out.println(StartServer.getCurTime() + "class ClientHandler - Сервер получил данные аунтотификации " + data);
+                        logger.log(Level.INFO,"Сервер получил данные аунтотификации " + data);
                         if (data.startsWith("/auth")){
-                            System.out.println(StartServer.getCurTime() + "class ClientHandler - Установка времени timeout");
+                            logger.log(Level.INFO,"Установка времени timeout");
                             socket.setSoTimeout(TIMEOUT_CLOSE_CONNECT);
                             sendMsg(String.format("%s %s", "/timeout_on", TIMEOUT_CLOSE_CONNECT));
                             String[] token = data.split("\\s");
@@ -60,7 +63,7 @@ public class ClientHandler {
                                     nickName = newNickName;
                                     sendMsg(String.format("%s %s", "/authok", newNickName));
                                     server.subscribe(this);
-                                    System.out.println(StartServer.getCurTime() + "class ClientHandler - Клиент " + nickName + " подключился");
+                                    logger.log(Level.INFO,"Клиент " + nickName + " подключился");
                                     socket.setSoTimeout(0);
                                     break;
                                 } else {
@@ -83,7 +86,7 @@ public class ClientHandler {
                             }
                         }
                         if (data.startsWith("/timeout_off")){
-                            System.out.println(StartServer.getCurTime() + "class ClientHandler - сброс времени timeout");
+                            logger.log(Level.INFO,"сброс времени timeout");
                             socket.setSoTimeout(0);
                         }
                     }
@@ -94,7 +97,7 @@ public class ClientHandler {
 
                     //работа
                     while (true){
-                        System.out.println(StartServer.getCurTime() + "class ClientHandler - Цикл работы");
+                        logger.log(Level.INFO,"Цикл работы");
                         String msg = inputStreamNet.readUTF();
                         String[] globalToken = msg.split("\\s", 3);
                         String dateGetMsgFromClient = String.format("%s %s", globalToken[0], globalToken[1]);
@@ -119,13 +122,13 @@ public class ClientHandler {
                         DatabaseHandler.insertClientsMsgInDB("/his", this.nickName, "null", dateGetMsgFromClient, msg);
                     }
                 } catch (SocketTimeoutException e){
-                    System.out.println(" class ClientHandler - " + e.getMessage());
+                    logger.log(Level.INFO,e.getMessage());
                     sendMsg("/endtime Истекло время аутентификации на сервере");
                 }
                 catch (IOException e) {
                     e.printStackTrace();
                 } finally {
-                    System.out.println(StartServer.getCurTime() + "class ClientHandler - disconnect client: " + socket.getRemoteSocketAddress());
+                    logger.log(Level.INFO,"disconnect client: " + socket.getRemoteSocketAddress());
                     server.unsubscribe(this);
                     try {
                         socket.close();
@@ -145,7 +148,7 @@ public class ClientHandler {
         try {
             msg = msg.trim();
             outputStreamNet.writeUTF(String.format("%s", msg));
-            System.out.println(StartServer.getCurTime() + "class ClientHandler - ClientHandler " + this.getNickName() + " отправил сообщение: \"" + msg + "\"");
+            logger.log(Level.INFO,"ClientHandler " + this.getNickName() + " отправил сообщение: \"" + msg + "\"");
         } catch (IOException e) {
             e.printStackTrace();
         }
