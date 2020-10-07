@@ -42,7 +42,7 @@ public class AuthController {
         isAuthentication = authentication;
         if (authentication){
 ///////////////////////загрузка истории из локального файла
-            chatController.getLocalHistory(loginTxtFld.getText().trim());
+            chatController.setLogin(loginTxtFld.getText().trim());
         }
     }
 

@@ -31,10 +31,8 @@ public class ChatController implements Initializable{
     private String dateMsg;
     private String msgForChat;
     private File history;
-    private String login;
 
-    public void getLocalHistory(String login) {
-
+    public void setLogin(String login) {
         if (history == null || !this.login.equals(login)) {
             history = new File(String.format("client/%s.txt", login));
             boolean iscreated = false;
@@ -51,6 +49,13 @@ public class ChatController implements Initializable{
             else
                 System.out.println("class StartServer - файл истории уже был создан");
         }
+        //загрузка локальной истории
+        getLocalHistory();
+    }
+
+    private String login;
+
+    private void getLocalHistory() {
         try (BufferedReader reader = new BufferedReader(new FileReader(history.getPath()))){
             String str;
             LinkedList<String> temp = new LinkedList<>();
@@ -65,7 +70,6 @@ public class ChatController implements Initializable{
             for (String s : temp) {
                 createGUIMessageForChat(false, s);
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }

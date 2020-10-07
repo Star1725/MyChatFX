@@ -89,7 +89,7 @@ public class ClientHandler {
                     }
 
 ///////////////////////загрузка истории из БД
-//                    DatabaseHandler.uploadHistoryForClientHandler(this.nickName, server);
+                    //DatabaseHandler.uploadHistoryForClientHandler(this.nickName, server);
 
 
                     //работа
